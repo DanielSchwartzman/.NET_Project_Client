@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace NET_Project_Client.Model.ChessPieces
         protected bool color; // 0-White 1-Black
         protected Coordinate loc;
         protected List<Coordinate> AvailableMoves;
+        public Image img;
 
         public Piece(bool color, Coordinate loc)
         {

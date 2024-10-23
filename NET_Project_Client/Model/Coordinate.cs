@@ -11,7 +11,7 @@ namespace NET_Project_Client.Model
         public int x { get; set; }
         public int y { get; set; }
 
-        public Coordinate(int x, int y)
+        public Coordinate(int y, int x)
         {
             this.x = x;
             this.y = y;
