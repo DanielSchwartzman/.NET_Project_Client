@@ -52,6 +52,14 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\ChessBoard.cs" />
+    <Compile Include="Model\ChessPieces\Bishop.cs" />
+    <Compile Include="Model\ChessPieces\King.cs" />
+    <Compile Include="Model\ChessPieces\Knight.cs" />
+    <Compile Include="Model\ChessPieces\Pawn.cs" />
+    <Compile Include="Model\ChessPieces\Piece.cs" />
+    <Compile Include="Model\ChessPieces\Rook.cs" />
+    <Compile Include="Model\Coordinate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
