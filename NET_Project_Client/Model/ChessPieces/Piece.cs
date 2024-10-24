@@ -37,7 +37,7 @@ namespace NET_Project_Client.Model.ChessPieces
 
             for (int i = 0; i < AvailableMoves.Count; i++)
             {
-                sb += " " + AvailableMoves[i].toString();
+                sb += " " + AvailableMoves[i].ToString();
             }
             return sb;
         }

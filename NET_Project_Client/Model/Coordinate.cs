@@ -17,7 +17,7 @@ namespace NET_Project_Client.Model
             this.y = y;
         }
         
-        public string toString()
+        public override string ToString()
         {
             return "[" + y.ToString()+ ", " + x.ToString() + "]";
         }

@@ -20,8 +20,15 @@ namespace NET_Project_Client
         int click;
         bool turn;
 
+        bool toDraw = false;
+
         int clickrow;
         int clickcol;
+
+        private Bitmap bitmap;
+        private const int SIZE = 2;
+        private int x = -SIZE;
+        private int y = -SIZE;
 
         // Animation related variables
         private Timer animationTimer;
@@ -38,11 +45,14 @@ namespace NET_Project_Client
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
+            this.MouseMove += new MouseEventHandler(Form1_MouseMove);
 
             // Initialize animation timer
             animationTimer = new Timer();
             animationTimer.Interval = 16; // ~60 FPS
             animationTimer.Tick += new EventHandler(AnimateMove);
+
+            this.DoubleBuffered = true;
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
@@ -50,6 +60,7 @@ namespace NET_Project_Client
             chessBoard = new ChessBoard();
             click = 0;
             turn = false;
+            bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
@@ -90,14 +101,25 @@ namespace NET_Project_Client
 
                 g.DrawImage(movingPiece.img, currentLocation.X, currentLocation.Y, squareWidth, squareHeight);
             }
+
+            if (toDraw)
+            {
+                Graphics gr = Graphics.FromImage(bitmap);
+                gr.FillEllipse(Brushes.Red, x - SIZE / 2, y - SIZE / 2, SIZE, SIZE);
+                e.Graphics.DrawImage(bitmap, 0, 0);
+                gr.Dispose();
+            }
         }
 
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
-            int clickedColumn = e.X / squareWidth;
-            int clickedRow = e.Y / squareHeight;
+            if (!toDraw)
+            {
+                int clickedColumn = e.X / squareWidth;
+                int clickedRow = e.Y / squareHeight;
 
-            OnSquareClick(clickedRow, clickedColumn);
+                OnSquareClick(clickedRow, clickedColumn);
+            }
         }
 
         private void OnSquareClick(int row, int col)
@@ -108,7 +130,7 @@ namespace NET_Project_Client
                 {
                     if (chessBoard.chessBoard[row, col].getColor() == turn)
                     {
-                        MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
+                        // MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
                         clickrow = row;
                         clickcol = col;
                         click = 1;
@@ -173,13 +195,40 @@ namespace NET_Project_Client
                 animationProgress = 1.0f;
                 animationTimer.Stop();
                 chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth));
-
+                if (chessBoard.check)
+                    MessageBox.Show(chessBoard.coordinatecoordinateListString());
                 // Reset moving piece
                 movingPiece = null;
             }
 
             // Redraw the form to show animation
             this.Invalidate();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (bitmap != null)
+            {
+                bitmap.Dispose();
+                bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+                this.Invalidate();
+            }
+            toDraw = !toDraw;
+        }
+
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+
+            if (toDraw)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    x = e.X;
+                    y = e.Y;
+                    this.Invalidate();
+                    this.Update();
+                }
+            }
         }
     }
 }
