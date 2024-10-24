@@ -16,6 +16,11 @@ namespace NET_Project_Client.Model
             this.x = x;
             this.y = y;
         }
+        
+        public string toString()
+        {
+            return "[" + y.ToString()+ ", " + x.ToString() + "]";
+        }
 
         public bool Equals(Coordinate other)
         {

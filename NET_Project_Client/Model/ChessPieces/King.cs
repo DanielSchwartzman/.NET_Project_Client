@@ -19,14 +19,15 @@ namespace NET_Project_Client.Model.ChessPieces
 
         public override void CalculateMoves(Piece[,] GameBoard)
         {
+            AvailableMoves = new List<Coordinate>();
             int helpX, helpY;
             for (int i = -1; i <= 1; i++)
             {
                 for (int j = -1; j <= 1; j++)
                 {
-                    helpX = loc.x + i;
-                    helpY = loc.y + j;
-                    if(helpY >= 0 && helpY <= 7 && helpX >= 0 && helpX <= 3 && (helpX != loc.x && helpY != loc.y))
+                    helpY = loc.y + i;
+                    helpX = loc.x + j;
+                    if(helpY >= 0 && helpY <= 7 && helpX >= 0 && helpX <= 3)
                     {
                         if (GameBoard[helpY,helpX] == null || GameBoard[helpY, helpX].getColor() != color)
                             AvailableMoves.Add(new Coordinate(helpY, helpX));

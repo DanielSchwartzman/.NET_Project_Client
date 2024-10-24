@@ -19,40 +19,41 @@ namespace NET_Project_Client.Model.ChessPieces
 
         public override void CalculateMoves(Piece[,] GameBoard)
         {
-            if(loc.y - 2 >= 0)
+            AvailableMoves = new List<Coordinate>();
+            if (loc.y - 2 >= 0)
             {
                 if (loc.x - 1 >= 0)
-                    if (GameBoard[loc.y - 2, loc.x - 1] != null && GameBoard[loc.y - 2, loc.x - 1].getColor() != color)
+                    if (GameBoard[loc.y - 2, loc.x - 1] == null || GameBoard[loc.y - 2, loc.x - 1].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y - 2, loc.x - 1));
                 if (loc.x + 1 <= 3)
-                    if (GameBoard[loc.y - 2, loc.x + 1] != null && GameBoard[loc.y - 2, loc.x + 1].getColor() != color)
+                    if (GameBoard[loc.y - 2, loc.x + 1] == null || GameBoard[loc.y - 2, loc.x + 1].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y - 2, loc.x + 1));
             }
             if(loc.y + 2 <= 7)
             {
                 if (loc.x - 1 >= 0)
-                    if (GameBoard[loc.y + 2, loc.x - 1] != null && GameBoard[loc.y + 2, loc.x - 1].getColor() != color)
+                    if (GameBoard[loc.y + 2, loc.x - 1] == null || GameBoard[loc.y + 2, loc.x - 1].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y + 2, loc.x - 1));
                 if (loc.x + 1 <= 3)
-                    if (GameBoard[loc.y + 2, loc.x + 1] != null && GameBoard[loc.y + 2, loc.x + 1].getColor() != color)
+                    if (GameBoard[loc.y + 2, loc.x + 1] == null || GameBoard[loc.y + 2, loc.x + 1].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y + 2, loc.x + 1));
             }
             if(loc.x + 2 <= 3)
             {
                 if (loc.y - 1 >= 0)
-                    if (GameBoard[loc.y - 1, loc.x + 2] != null && GameBoard[loc.y - 1, loc.x + 2].getColor() != color)
+                    if (GameBoard[loc.y - 1, loc.x + 2] == null || GameBoard[loc.y - 1, loc.x + 2].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y - 1, loc.x + 2));
                 if (loc.y + 1 <= 7)
-                    if (GameBoard[loc.y + 1, loc.x + 1] != null && GameBoard[loc.y + 1, loc.x + 2].getColor() != color)
+                    if (GameBoard[loc.y + 1, loc.x + 2] == null || GameBoard[loc.y + 1, loc.x + 2].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y + 1, loc.x + 2));
             }
             if(loc.x - 2 >= 0)
             {
                 if (loc.y - 1 >= 0)
-                    if (GameBoard[loc.y - 1, loc.x - 2] != null && GameBoard[loc.y - 1, loc.x - 2].getColor() != color)
+                    if (GameBoard[loc.y - 1, loc.x - 2] == null || GameBoard[loc.y - 1, loc.x - 2].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y - 1, loc.x - 2));
                 if (loc.y + 1 <= 7)
-                    if (GameBoard[loc.y + 1, loc.x - 2] != null && GameBoard[loc.y + 1, loc.x - 2].getColor() != color)
+                    if (GameBoard[loc.y + 1, loc.x - 2] == null || GameBoard[loc.y + 1, loc.x - 2].getColor() != color)
                         AvailableMoves.Add(new Coordinate(loc.y + 1, loc.x - 2));
             }
         }

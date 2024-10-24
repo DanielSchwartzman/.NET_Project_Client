@@ -19,7 +19,8 @@ namespace NET_Project_Client.Model.ChessPieces
 
         public override void CalculateMoves(Piece[,] GameBoard)
         {
-            if(color == false)
+            AvailableMoves = new List<Coordinate>();
+            if (color == false)
             {
                 if(loc.y - 1 >= 0)
                     if (GameBoard[loc.y - 1, loc.x] == null)

@@ -19,14 +19,13 @@ namespace NET_Project_Client.Model
 
         public void MakeMove(Coordinate begin, Coordinate end)
         {
-            chessBoard[end.x,end.y] = chessBoard[begin.x,begin.y];
-            chessBoard[begin.x, begin.y] = null;
+            chessBoard[end.y, end.x] = chessBoard[begin.y, begin.x];
+            chessBoard[end.y, end.x].setLoc(end.y, end.x);
+            chessBoard[begin.y, begin.x] = null;
 
             SaveMoveToDB(begin, end);
 
             CalculateMovesForAllPieces();
-
-            //Call Display
 
             //SEND FOR RESPONSE HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             ///////////////////////////////////////

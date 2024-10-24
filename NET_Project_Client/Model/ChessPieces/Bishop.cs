@@ -19,40 +19,81 @@ namespace NET_Project_Client.Model.ChessPieces
 
         public override void CalculateMoves(Piece[,] GameBoard)
         {
+            AvailableMoves = new List<Coordinate>();
+            bool stop = false;
             int helpX, helpY;
 
             helpX = loc.x - 1; helpY = loc.y - 1;
-            while(helpX >= 0 && helpY >= 0)
+            while(helpX >= 0 && helpY >= 0 && !stop)
             {
-                if (GameBoard[helpY, helpX] == null || GameBoard[helpY, helpX].getColor() != color)
+                if (GameBoard[helpY, helpX] == null)
                     AvailableMoves.Add(new Coordinate(helpY, helpX));
+                else if (GameBoard[helpY, helpX].getColor() != color)
+                {
+                    AvailableMoves.Add(new Coordinate(helpY, helpX));
+                    stop = true;
+                }
+                else
+                {
+                    stop = true;
+                }
                 helpX = helpX - 1;
                 helpY = helpY - 1;
             }
 
+            stop = false;
             helpX = loc.x + 1; helpY = loc.y - 1;
-            while (helpX <= 3 && helpY >= 0)
+            while (helpX <= 3 && helpY >= 0 && !stop)
             {
-                if (GameBoard[helpY, helpX] == null || GameBoard[helpY, helpX].getColor() != color)
+                if (GameBoard[helpY, helpX] == null)
                     AvailableMoves.Add(new Coordinate(helpY, helpX));
+                else if (GameBoard[helpY, helpX].getColor() != color)
+                {
+                    AvailableMoves.Add(new Coordinate(helpY, helpX));
+                    stop = true;
+                }
+                else
+                {
+                    stop = true;
+                }
                 helpX = helpX + 1;
                 helpY = helpY - 1;
             }
 
+            stop = false;
             helpX = loc.x - 1; helpY = loc.y + 1;
-            while (helpX >= 0 && helpY <= 7)
+            while (helpX >= 0 && helpY <= 7 && !stop)
             {
-                if (GameBoard[helpY, helpX] == null || GameBoard[helpY, helpX].getColor() != color)
+                if (GameBoard[helpY, helpX] == null)
                     AvailableMoves.Add(new Coordinate(helpY, helpX));
+                else if (GameBoard[helpY, helpX].getColor() != color)
+                {
+                    AvailableMoves.Add(new Coordinate(helpY, helpX));
+                    stop = true;
+                }
+                else
+                {
+                    stop = true;
+                }
                 helpX = helpX - 1;
                 helpY = helpY + 1;
             }
 
+            stop = false;
             helpX = loc.x + 1; helpY = loc.y + 1;
-            while (helpX <= 3 && helpY <= 7)
+            while (helpX <= 3 && helpY <= 7 && !stop)
             {
-                if (GameBoard[helpY, helpX] == null || GameBoard[helpY, helpX].getColor() != color)
+                if (GameBoard[helpY, helpX] == null)
                     AvailableMoves.Add(new Coordinate(helpY, helpX));
+                else if (GameBoard[helpY, helpX].getColor() != color)
+                {
+                    AvailableMoves.Add(new Coordinate(helpY, helpX));
+                    stop = true;
+                }
+                else
+                {
+                    stop = true;
+                }
                 helpX = helpX + 1;
                 helpY = helpY + 1;
             }
