@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Timers;
 
 namespace NET_Project_Client
 {
@@ -19,6 +20,10 @@ namespace NET_Project_Client
         int squareHeight;
         int click;
         bool turn;
+
+        private static System.Timers.Timer aTimer;
+        private static double timerInterval = 20000;
+        private static double elapsedTime = 0;
 
         bool toDraw = false;
 
@@ -31,7 +36,7 @@ namespace NET_Project_Client
         private int y = -SIZE;
 
         // Animation related variables
-        private Timer animationTimer;
+        private System.Windows.Forms.Timer animationTimer;
         private Piece movingPiece;
         private Point sourceLocation;
         private Point targetLocation;
@@ -48,7 +53,7 @@ namespace NET_Project_Client
             this.MouseMove += new MouseEventHandler(Form1_MouseMove);
 
             // Initialize animation timer
-            animationTimer = new Timer();
+            animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 16; // ~60 FPS
             animationTimer.Tick += new EventHandler(AnimateMove);
 
@@ -61,7 +66,41 @@ namespace NET_Project_Client
             click = 0;
             turn = false;
             bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+
+            aTimer = new System.Timers.Timer();
+            aTimer.Elapsed += OnTimedEvent;
+            aTimer.Start();
         }
+
+        private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            elapsedTime += aTimer.Interval;
+
+            if (elapsedTime >= timerInterval)
+            {
+                aTimer.Stop();
+                Console.WriteLine("Timer elapsed!");
+            }
+
+            label2.Text = "Time Left: " + (int)(GetTimeLeft()/1000);
+        }
+
+        static double GetTimeLeft()
+        {
+            double timeLeft = timerInterval - elapsedTime;
+
+            if (timeLeft > 0)
+            {
+                return timeLeft;
+            }
+            else
+            {
+                MessageBox.Show("Times up");
+                aTimer.Stop();
+                return 0;
+            }
+        }
+
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
@@ -154,6 +193,7 @@ namespace NET_Project_Client
                         StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
                         click = 0;
                         switchTurn();
+                        ResetTimer();
                     }
                     else
                     {
@@ -162,6 +202,14 @@ namespace NET_Project_Client
                     }
                 }
             }
+        }
+
+        private static void ResetTimer()
+        {
+            aTimer.Stop(); // Stop the timer
+            elapsedTime = 0; // Reset the elapsed time
+
+            aTimer.Start(); // Restart the timer
         }
 
         private void switchTurn()

@@ -39,12 +39,13 @@ namespace NET_Project_Client.Model
             {
                 setFocus(kingRow, kingCol, trRow, trCol);
             }
-
+            
             //SEND FOR RESPONSE HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             ///////////////////////////////////////
             ///////////////////
             ////////////////////////
             ///
+
             turn = !turn;
         }
 
