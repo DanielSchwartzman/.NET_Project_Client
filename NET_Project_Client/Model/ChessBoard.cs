@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace NET_Project_Client.Model
 {
@@ -24,8 +25,9 @@ namespace NET_Project_Client.Model
             CalculateMovesForAllPieces();
         }
 
-        public void MakeMove(Coordinate begin, Coordinate end)
+        public bool MakeMove(Coordinate begin, Coordinate end)
         {
+            bool victory = false;
             int kingRow = -1, kingCol = -1, trRow = -1, trCol = -1;
             chessBoard[end.y, end.x] = chessBoard[begin.y, begin.x];
             chessBoard[end.y, end.x].setLoc(end.y, end.x);
@@ -34,10 +36,20 @@ namespace NET_Project_Client.Model
             SaveMoveToDB(begin, end);
 
             CalculateMovesForAllPieces();
+            removeIllegalMovesForKing();
             check = checkIfCheck(out kingRow, out kingCol, out trRow, out trCol);
             if (check)
             {
                 setFocus(kingRow, kingCol, trRow, trCol);
+                ((King)chessBoard[kingRow,kingCol]).setPicture(true);
+                victory = checkVictory();
+            }
+            else
+            {
+                if(chessBoard[end.y,end.x] is King)
+                {
+                    ((King)chessBoard[end.y, end.x]).setPicture(false);
+                }
             }
             
             //SEND FOR RESPONSE HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
@@ -47,6 +59,31 @@ namespace NET_Project_Client.Model
             ///
 
             turn = !turn;
+            return victory;
+        }
+
+        public bool checkVictory()
+        {
+            bool victory = true;
+            for (int i = 0; i < 8; i++)
+            {
+                for(int j = 0; j < 4; j++)
+                {
+                    if (chessBoard[i, j] != null)
+                    {
+                        if (chessBoard[i,j].getColor() != turn && chessBoard[i,j].AvailableMoves.Count() > 0)
+                            victory = false;
+                    }
+                }
+            }
+            if (victory)
+            {
+                if (turn)
+                    MessageBox.Show("Victory for Blacks");
+                else
+                    MessageBox.Show("Victory for Whites");
+            }
+            return victory;
         }
 
         private bool checkIfCheck(out int kingRow, out int kingCol, out int trRow, out int trCol)
@@ -73,6 +110,18 @@ namespace NET_Project_Client.Model
             }
             kingRow = -1; kingCol = -1; trRow = -1; trCol = -1; 
             return false;
+        }
+
+        private void removeIllegalMovesForKing()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (chessBoard[i, j] is King)
+                        ((King)chessBoard[i, j]).removeMoves(chessBoard);
+                }
+            }
         }
 
         private void setFocus(int kingRow, int kingCol, int trRow, int trCol)

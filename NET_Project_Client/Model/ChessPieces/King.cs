@@ -35,5 +35,59 @@ namespace NET_Project_Client.Model.ChessPieces
                 }
             }
         }
+
+        public void removeMoves(Piece[,] GameBoard)
+        {
+            int size;
+            bool rm;
+            for (int i = 0; i < AvailableMoves.Count(); i++)
+            {
+                rm = false;
+                for (int j = 0; j < 8; j++)
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        if (GameBoard[j, k] != null)
+                            if (GameBoard[j, k].getColor() != color)
+                            {
+                                size = GameBoard[j, k].AvailableMoves.Count();
+                                for (int l = 0; l < size; l++)
+                                {
+                                    if(GameBoard[j, k].AvailableMoves[l].Equals(GameBoard[loc.y, loc.x].AvailableMoves[i]))
+                                    {
+                                        AvailableMoves.RemoveAt(i);
+                                        rm = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        if (rm)
+                            break;
+                    }
+                    if (rm)
+                        break;
+                }
+                if (rm)
+                    i--;
+            }
+        }
+
+        public void setPicture(bool tr)
+        {
+            if (tr)
+            {
+                if (color == false)
+                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_white_check.png");
+                else
+                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_black_check.png");
+            }
+            else
+            {
+                if (color == false)
+                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_white.png");
+                else
+                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_black.png");
+            }
+        }
     }
 }

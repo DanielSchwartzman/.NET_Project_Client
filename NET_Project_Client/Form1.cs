@@ -101,6 +101,11 @@ namespace NET_Project_Client
             }
         }
 
+        public void victory()
+        {
+            this.Close();
+        }
+
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
@@ -242,7 +247,8 @@ namespace NET_Project_Client
                 // Animation is complete
                 animationProgress = 1.0f;
                 animationTimer.Stop();
-                chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth));
+                if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth)))
+                    victory();
                 if (chessBoard.check)
                     MessageBox.Show(chessBoard.coordinatecoordinateListString());
                 // Reset moving piece
