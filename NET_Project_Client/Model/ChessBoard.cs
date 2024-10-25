@@ -15,14 +15,19 @@ namespace NET_Project_Client.Model
         bool turn;
         public bool check;
         public List<Coordinate> coordinateList;
+        Form view;
+        int move = 1;
+        bool type;
 
-        public ChessBoard()
+        public ChessBoard(Form f, bool type)
         {
+            view = f;
             turn = false;
             chessBoard = new Piece[8, 4];
             check = false;
             InitializeBoard();
             CalculateMovesForAllPieces();
+            this.type = type;
         }
 
         public bool MakeMove(Coordinate begin, Coordinate end)
@@ -33,7 +38,8 @@ namespace NET_Project_Client.Model
             chessBoard[end.y, end.x].setLoc(end.y, end.x);
             chessBoard[begin.y, begin.x] = null;
 
-            SaveMoveToDB(begin, end);
+            if(type)
+                SaveMoveToDB(begin, end);
 
             CalculateMovesForAllPieces();
             removeIllegalMovesForKing();
@@ -51,14 +57,9 @@ namespace NET_Project_Client.Model
                     ((King)chessBoard[end.y, end.x]).setPicture(false);
                 }
             }
-            
-            //SEND FOR RESPONSE HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-            ///////////////////////////////////////
-            ///////////////////
-            ////////////////////////
-            ///
 
             turn = !turn;
+            move++;
             return victory;
         }
 
@@ -75,13 +76,6 @@ namespace NET_Project_Client.Model
                             victory = false;
                     }
                 }
-            }
-            if (victory)
-            {
-                if (turn)
-                    MessageBox.Show("Victory for Blacks");
-                else
-                    MessageBox.Show("Victory for Whites");
             }
             return victory;
         }
@@ -203,7 +197,7 @@ namespace NET_Project_Client.Model
 
         private void SaveMoveToDB(Coordinate begin, Coordinate end)
         {
-
+            ((Form1)view).InsertMoveIntoDB(move, begin.y, begin.x, end.y, end.x);
         }
 
         private void CalculateMovesForAllPieces()

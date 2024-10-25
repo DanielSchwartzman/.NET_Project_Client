@@ -12,9 +12,9 @@ namespace NET_Project_Client.Model.ChessPieces
         public King(bool color, Coordinate loc) : base(color, loc)
         {
             if (color)
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_black.png");
+                img = Image.FromFile("./../../../Resources/king_black.png");
             else
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_white.png");
+                img = Image.FromFile("./../../../Resources/king_white.png");
         }
 
         public override void CalculateMoves(Piece[,] GameBoard)
@@ -77,16 +77,16 @@ namespace NET_Project_Client.Model.ChessPieces
             if (tr)
             {
                 if (color == false)
-                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_white_check.png");
+                    img = Image.FromFile("./../../../Resources/king_white_check.png");
                 else
-                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_black_check.png");
+                    img = Image.FromFile("./../../../Resources/king_black_check.png");
             }
             else
             {
                 if (color == false)
-                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_white.png");
+                    img = Image.FromFile("./../../../Resources/king_white.png");
                 else
-                    img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/king_black.png");
+                    img = Image.FromFile("./../../../Resources/king_black.png");
             }
         }
     }

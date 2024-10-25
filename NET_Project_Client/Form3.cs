@@ -1,22 +1,22 @@
-﻿using NET_Project_Client.Model;
-using NET_Project_Client.Model.ChessPieces;
+﻿using NET_Project_Client.Model.ChessPieces;
+using NET_Project_Client.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Timers;
-using System.Data.SqlClient;
-using System.Diagnostics;
-using System.Security.Cryptography;
+using System.Windows.Forms;
+using System.Threading;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 
 namespace NET_Project_Client
 {
-    public partial class Form1 : Form
+    public partial class Form3 : Form
     {
         private string connectionstr = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\GitRep\\NET_Project_Client\\NET_Project_Client\\Database1.mdf;Integrated Security=True";
         int gameID;
@@ -27,11 +27,9 @@ namespace NET_Project_Client
         int click;
         bool turn;
 
-        private static System.Timers.Timer aTimer;
-        private static double timerInterval = 20000;
-        private static double elapsedTime = 0;
+        List<int> allMoves = new List<int>();
 
-        bool toDraw = false;
+        int clicked = 0;
 
         int clickrow;
         int clickcol;
@@ -50,14 +48,14 @@ namespace NET_Project_Client
         private const int animationDuration = 500; // 500 ms
         private DateTime animationStartTime;
 
-        public Form1(int PlayerID)
+        public Form3(int Gid)
         {
             InitializeComponent();
+            gameID = Gid;
 
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
-            this.MouseMove += new MouseEventHandler(Form1_MouseMove);
 
             // Initialize animation timer
             animationTimer = new System.Windows.Forms.Timer();
@@ -65,50 +63,14 @@ namespace NET_Project_Client
             animationTimer.Tick += new EventHandler(AnimateMove);
 
             this.DoubleBuffered = true;
-
-            InsertNewPlayerToDB(PlayerID);
-            ReadLastID();
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
         {
-            chessBoard = new ChessBoard(this, true);
+            chessBoard = new ChessBoard(this, false);
             click = 0;
             turn = false;
-            bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
-
-            aTimer = new System.Timers.Timer();
-            aTimer.Elapsed += OnTimedEvent;
-            aTimer.Start();
-        }
-
-        private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            elapsedTime += aTimer.Interval;
-
-            if (elapsedTime >= timerInterval)
-            {
-                aTimer.Stop();
-                Console.WriteLine("Timer elapsed!");
-            }
-
-            // label2.Text = "Time Left: " + (int)(GetTimeLeft()/1000);
-        }
-
-        static double GetTimeLeft()
-        {
-            double timeLeft = timerInterval - elapsedTime;
-
-            if (timeLeft > 0)
-            {
-                return timeLeft;
-            }
-            else
-            {
-                MessageBox.Show("Times up");
-                aTimer.Stop();
-                return 0;
-            }
+            loadDataFromDB();
         }
 
         public void victory()
@@ -119,7 +81,6 @@ namespace NET_Project_Client
                 MessageBox.Show("Victory for Whites");
             this.Close();
         }
-
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
@@ -159,24 +120,35 @@ namespace NET_Project_Client
 
                 g.DrawImage(movingPiece.img, currentLocation.X, currentLocation.Y, squareWidth, squareHeight);
             }
-
-            if (toDraw)
-            {
-                Graphics gr = Graphics.FromImage(bitmap);
-                gr.FillEllipse(Brushes.Red, x - SIZE / 2, y - SIZE / 2, SIZE, SIZE);
-                e.Graphics.DrawImage(bitmap, 0, 0);
-                gr.Dispose();
-            }
         }
 
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!toDraw)
+            if (clicked < allMoves.Count())
             {
-                int clickedColumn = e.X / squareWidth;
-                int clickedRow = e.Y / squareHeight;
+                int fromRow;
+                int fromCol;
+                int toRow;
+                int toCol;
 
-                OnSquareClick(clickedRow, clickedColumn);
+                toCol = allMoves[clicked] % 10;
+                allMoves[clicked] /= 10;
+
+                toRow = allMoves[clicked] % 10;
+                allMoves[clicked] /= 10;
+
+                fromCol = allMoves[clicked] % 10;
+                allMoves[clicked] /= 10;
+
+                if (allMoves[clicked] > 0)
+                    fromRow = allMoves[clicked];
+                else
+                    fromRow = 0;
+
+                OnSquareClick(fromRow, fromCol);
+                OnSquareClick(toRow, toCol);
+
+                clicked++;
             }
         }
 
@@ -208,11 +180,14 @@ namespace NET_Project_Client
                     }
                     if (ok)
                     {
-                        // Initiate animation
-                        StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                        bool res = chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                        this.Invalidate();
                         click = 0;
                         switchTurn();
-                        ResetTimer();
+                        if (res)
+                        {
+                            victory();
+                        }
                     }
                     else
                     {
@@ -221,14 +196,6 @@ namespace NET_Project_Client
                     }
                 }
             }
-        }
-
-        private static void ResetTimer()
-        {
-            aTimer.Stop(); // Stop the timer
-            elapsedTime = 0; // Reset the elapsed time
-
-            aTimer.Start(); // Restart the timer
         }
 
         private void switchTurn()
@@ -273,79 +240,28 @@ namespace NET_Project_Client
             this.Invalidate();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void loadDataFromDB()
         {
-            if (bitmap != null)
-            {
-                bitmap.Dispose();
-                bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
-                this.Invalidate();
-            }
-            toDraw = !toDraw;
-        }
+            string queryString = "SELECT * FROM [dbo].[GameOrder] WHERE Gid = " + gameID + ";";
 
-        private void Form1_MouseMove(object sender, MouseEventArgs e)
-        {
-
-            if (toDraw)
+            using (SqlConnection connection = new SqlConnection(connectionstr))
             {
-                if (e.Button == MouseButtons.Left)
+                SqlCommand command = new SqlCommand(queryString, connection);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    x = e.X;
-                    y = e.Y;
-                    this.Invalidate();
-                    this.Update();
+                    while (reader.Read())
+                    {
+                        // Access each column by index or column name
+                        int gid = reader.GetInt32(0); // Assuming Gid is the first column
+                        int moveID = reader.GetInt32(1); // Pid column
+                        int theMove = reader.GetInt32(2); // Name column
+
+                        allMoves.Add(theMove);
+                    }
                 }
-            }
-        }
 
-        public void InsertNewPlayerToDB(int Pid)
-        {
-            string queryString = "INSERT INTO [dbo].[GamesPlayed] (Pid) VALUES("+Pid+");";
-            using (SqlConnection connection = new SqlConnection(
-                       connectionstr))
-            {
-                SqlCommand command = new SqlCommand(
-                    queryString, connection);
-                connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                bindingSource1.DataSource = reader;
-                reader.Close();
-                connection.Close();
-            }
-        }
-
-        public void ReadLastID()
-        {
-            string queryString = "SELECT MAX(Gid) AS HighestGid FROM [dbo].[GamesPlayed];";
-            using (SqlConnection connection = new SqlConnection(
-                       connectionstr))
-            {
-                SqlCommand command = new SqlCommand(
-                    queryString, connection);
-                connection.Open();
-                object result = command.ExecuteScalar();
-                if (result != null)
-                {
-                    gameID = Convert.ToInt32(result); // Retrieve the Gid from SCOPE_IDENTITY()
-                }
-                connection.Close();
-            }
-        }
-
-        public void InsertMoveIntoDB(int moveID, int fromRow, int fromCol, int toRow, int toCol)
-        {
-            int rep = (((((fromRow * 10) + fromCol) * 10) + toRow) * 10) + toCol;
-            string queryString = "INSERT INTO [dbo].[GameOrder] (Gid, MoveID, TheMove) VALUES(" + gameID + ", " + moveID + ", " + rep +");";
-            using (SqlConnection connection = new SqlConnection(
-                       connectionstr))
-            {
-                SqlCommand command = new SqlCommand(
-                    queryString, connection);
-                connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                bindingSource1.DataSource = reader;
-                reader.Close();
                 connection.Close();
             }
         }

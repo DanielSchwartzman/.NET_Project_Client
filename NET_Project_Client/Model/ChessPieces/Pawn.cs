@@ -12,9 +12,9 @@ namespace NET_Project_Client.Model.ChessPieces
         public Pawn(bool color, Coordinate loc) : base(color, loc)
         {
             if(color)
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/pawn_black.png");
+                img = Image.FromFile("./../../../Resources/pawn_black.png");
             else
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/pawn_white.png");
+                img = Image.FromFile("./../../../Resources/pawn_white.png");
         }
 
         public override void CalculateMoves(Piece[,] GameBoard)

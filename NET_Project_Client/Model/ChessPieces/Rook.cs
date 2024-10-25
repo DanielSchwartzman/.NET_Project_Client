@@ -12,9 +12,9 @@ namespace NET_Project_Client.Model.ChessPieces
         public Rook(bool color, Coordinate loc) : base(color, loc) 
         {
             if (color)
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/rook_black.png");
+                img = Image.FromFile("./../../../Resources/rook_black.png");
             else
-                img = Image.FromFile("C:/GitRep/.NET_Project_Client/Resources/rook_white.png");
+                img = Image.FromFile("./../../../Resources/rook_white.png");
         }
 
         public override void CalculateMoves(Piece[,] GameBoard)
