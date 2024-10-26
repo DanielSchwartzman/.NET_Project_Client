@@ -13,6 +13,7 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Threading;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Threading;
 
 namespace NET_Project_Client
 {
@@ -40,13 +41,15 @@ namespace NET_Project_Client
         private int y = -SIZE;
 
         // Animation related variables
-        private System.Windows.Forms.Timer animationTimer;
+        private Thread animationThread;
+        private System.Timers.Timer replayTimer;
         private Piece movingPiece;
         private Point sourceLocation;
         private Point targetLocation;
         private float animationProgress;
         private const int animationDuration = 500; // 500 ms
         private DateTime animationStartTime;
+        private int currentMoveIndex = 0;
 
         public Form3(int Gid)
         {
@@ -55,12 +58,11 @@ namespace NET_Project_Client
 
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
-            this.MouseClick += new MouseEventHandler(Form1_MouseClick);
 
-            // Initialize animation timer
-            animationTimer = new System.Windows.Forms.Timer();
-            animationTimer.Interval = 16; // ~60 FPS
-            animationTimer.Tick += new EventHandler(AnimateMove);
+            replayTimer = new System.Timers.Timer();
+            replayTimer.Interval = 1000; // Set interval for move replay (1 second)
+            replayTimer.Elapsed += OnReplayTimerTick; // Attach event handler
+            replayTimer.AutoReset = true;
 
             this.DoubleBuffered = true;
         }
@@ -71,6 +73,7 @@ namespace NET_Project_Client
             click = 0;
             turn = false;
             loadDataFromDB();
+            StartGameReplay();
         }
 
         public void victory()
@@ -122,34 +125,48 @@ namespace NET_Project_Client
             }
         }
 
-        private void Form1_MouseClick(object sender, MouseEventArgs e)
+
+        private void StartGameReplay()
         {
-            if (clicked < allMoves.Count())
+            currentMoveIndex = 0; // Start from the first move
+
+            // Start the replay timer
+            replayTimer.Start();
+        }
+        private void OnReplayTimerTick(object sender, ElapsedEventArgs e)
+        {
+            // Ensure that UI updates are done on the main thread
+            this.Invoke((MethodInvoker)delegate
             {
-                int fromRow;
-                int fromCol;
-                int toRow;
-                int toCol;
+                if (currentMoveIndex < allMoves.Count())
+                {
+                    // Get the next move
+                    int fromRow, fromCol, toRow, toCol;
 
-                toCol = allMoves[clicked] % 10;
-                allMoves[clicked] /= 10;
+                    toCol = allMoves[currentMoveIndex] % 10;
+                    allMoves[currentMoveIndex] /= 10;
 
-                toRow = allMoves[clicked] % 10;
-                allMoves[clicked] /= 10;
+                    toRow = allMoves[currentMoveIndex] % 10;
+                    allMoves[currentMoveIndex] /= 10;
 
-                fromCol = allMoves[clicked] % 10;
-                allMoves[clicked] /= 10;
+                    fromCol = allMoves[currentMoveIndex] % 10;
+                    allMoves[currentMoveIndex] /= 10;
 
-                if (allMoves[clicked] > 0)
-                    fromRow = allMoves[clicked];
+                    fromRow = allMoves[currentMoveIndex] > 0 ? allMoves[currentMoveIndex] : 0;
+
+                    // Start the move animation
+                    StartMoveAnimation(new Coordinate(fromRow, fromCol), new Coordinate(toRow, toCol));
+
+                    // Increment to the next move
+                    currentMoveIndex++;
+                }
                 else
-                    fromRow = 0;
-
-                OnSquareClick(fromRow, fromCol);
-                OnSquareClick(toRow, toCol);
-
-                clicked++;
-            }
+                {
+                    // Stop the timer once all moves are played
+                    replayTimer.Stop();
+                    MessageBox.Show("Replay over");
+                }
+            });
         }
 
         private void OnSquareClick(int row, int col)
@@ -204,40 +221,54 @@ namespace NET_Project_Client
         }
 
         // Start animation when moving a piece
-        private void StartMoveAnimation(Coordinate start, Coordinate end)
+        private void StartMoveAnimation(Coordinate startloc, Coordinate endloc)
         {
-            movingPiece = chessBoard.GetPieceAt(start.y, start.x);
-            sourceLocation = new Point(start.x * squareWidth, start.y * squareHeight);
-            targetLocation = new Point(end.x * squareWidth, end.y * squareHeight);
+            movingPiece = chessBoard.GetPieceAt(startloc.y, startloc.x);
+            sourceLocation = new Point(startloc.x * squareWidth, startloc.y * squareHeight);
+            targetLocation = new Point(endloc.x * squareWidth, endloc.y * squareHeight);
             animationProgress = 0;
             animationStartTime = DateTime.Now;
 
             // Start the animation timer
-            animationTimer.Start();
+            animationThread = new Thread(() => AnimateMove(startloc, endloc));
+            animationThread.IsBackground = true; // Set as background thread
+            animationThread.Start();
         }
 
         // Animation tick method
-        private void AnimateMove(object sender, EventArgs e)
+        private void AnimateMove(Coordinate start, Coordinate end)
         {
-            // Calculate animation progress based on time
-            TimeSpan elapsed = DateTime.Now - animationStartTime;
-            animationProgress = (float)elapsed.TotalMilliseconds / animationDuration;
-
-            if (animationProgress >= 1.0f)
+            while (animationProgress < 1.0f)
             {
-                // Animation is complete
-                animationProgress = 1.0f;
-                animationTimer.Stop();
-                if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth)))
-                    victory();
-                if (chessBoard.check)
-                    MessageBox.Show(chessBoard.coordinatecoordinateListString());
-                // Reset moving piece
-                movingPiece = null;
+                // Calculate animation progress based on time
+                TimeSpan elapsed = DateTime.Now - animationStartTime;
+                animationProgress = (float)elapsed.TotalMilliseconds / animationDuration;
+
+                // Ensure progress is capped at 1.0
+                if (animationProgress >= 1.0f)
+                {
+                    animationProgress = 1.0f;
+                }
+
+                // Trigger form repaint to reflect the animation progress
+                this.Invoke((MethodInvoker)delegate
+                {
+                    this.Invalidate();
+                });
+
+                // Sleep briefly to control the animation frame rate (~60 FPS)
+                Thread.Sleep(16);
             }
 
-            // Redraw the form to show animation
-            this.Invalidate();
+            // Once animation is complete, perform the move
+            this.Invoke((MethodInvoker)delegate
+            {
+                OnSquareClick(start.y, start.x);
+                OnSquareClick(end.y, end.x);
+
+                movingPiece = null;
+                this.Invalidate();
+            });
         }
 
         private void loadDataFromDB()
