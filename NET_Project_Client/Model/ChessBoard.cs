@@ -240,5 +240,9 @@ namespace NET_Project_Client.Model
         {
             return chessBoard[row, col];
         }
+        public void SetPieceAt(Piece newpiece,int row, int col)
+        {
+            this.chessBoard[row, col] = newpiece;
+        }
     }
 }

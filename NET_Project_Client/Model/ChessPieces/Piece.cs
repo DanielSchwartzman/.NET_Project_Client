@@ -28,6 +28,11 @@ namespace NET_Project_Client.Model.ChessPieces
             loc = new Coordinate(row, col);
         }
 
+        public int getRow()
+        {
+            return loc.y;
+        }
+
         public bool getColor()
             { return color; }
 

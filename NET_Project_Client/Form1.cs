@@ -50,6 +50,13 @@ namespace NET_Project_Client
         private const int animationDuration = 500; // 500 ms
         private DateTime animationStartTime;
 
+        //custom messagebox for promotion variables
+        private Panel messageBoxPanel;
+        private Label messageLabel;
+        private Button buttonRook;
+        private Button buttonBishop;
+        private Button buttonKnight;
+
         public Form1(int PlayerID)
         {
             InitializeComponent();
@@ -65,6 +72,7 @@ namespace NET_Project_Client
             animationTimer.Tick += new EventHandler(AnimateMove);
 
             this.DoubleBuffered = true;
+            label1.Text = "Current Move: White";
 
             InsertNewPlayerToDB(PlayerID);
             ReadLastID();
@@ -79,7 +87,7 @@ namespace NET_Project_Client
 
             aTimer = new System.Timers.Timer();
             aTimer.Elapsed += OnTimedEvent;
-            aTimer.Start();
+            ResetTimer();
         }
 
         private void OnTimedEvent(Object source, ElapsedEventArgs e)
@@ -89,13 +97,44 @@ namespace NET_Project_Client
             if (elapsedTime >= timerInterval)
             {
                 aTimer.Stop();
-                Console.WriteLine("Timer elapsed!");
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new MethodInvoker(delegate {
+                        ShowTimeoutMessage();
+                    }));
+                }
+                else
+                {
+                    ShowTimeoutMessage();
+                }
             }
 
-            // label2.Text = "Time Left: " + (int)(GetTimeLeft()/1000);
+            if (label2.InvokeRequired)
+            {
+                //background thread - Invoke to call this on the UI thread
+                label2.Invoke(new MethodInvoker(delegate {
+                    label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
+                }));
+            }
+            else
+            {
+                //UI thread - update directly
+                label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
+            }
+        }
+        private void ShowTimeoutMessage()
+        {
+            this.Enabled = false;
+            DialogResult result = MessageBox.Show("Times up", "Timeout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.Enabled = true;
+
+            if (result == DialogResult.OK)
+            {
+                this.Close(); // Close the current form
+            }
         }
 
-        static double GetTimeLeft()
+        static double GetTimeLeft(Form form1)
         {
             double timeLeft = timerInterval - elapsedTime;
 
@@ -105,8 +144,7 @@ namespace NET_Project_Client
             }
             else
             {
-                MessageBox.Show("Times up");
-                aTimer.Stop();
+                //aTimer.Stop();
                 return 0;
             }
         }
@@ -188,7 +226,7 @@ namespace NET_Project_Client
                 {
                     if (chessBoard.chessBoard[row, col].getColor() == turn)
                     {
-                        // MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
+                        //MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
                         clickrow = row;
                         clickcol = col;
                         click = 1;
@@ -211,6 +249,10 @@ namespace NET_Project_Client
                         // Initiate animation
                         StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
                         click = 0;
+                        if (IsPawnPromoting(p,row,col))
+                        {
+                            ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
+                        }
                         switchTurn();
                         ResetTimer();
                     }
@@ -221,6 +263,21 @@ namespace NET_Project_Client
                     }
                 }
             }
+        }
+        private bool IsPawnPromoting(Piece p,int row, int col)
+        {
+            if (p is Pawn)
+            {
+                if (p.getRow() == 1&& row==0 && p.getColor() == turn)
+                {
+                    return true;
+                }
+                if (p.getRow() == 6&& row == 7 && p.getColor() == turn)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static void ResetTimer()
@@ -233,6 +290,18 @@ namespace NET_Project_Client
 
         private void switchTurn()
         {
+            if (label1.InvokeRequired)
+            {
+                //background thread - Invoke to call this on the UI thread
+                label1.Invoke(new MethodInvoker(delegate {
+                    label1.Text = "Current Move: " + (turn ? "White" : "Server");
+                }));
+            }
+            else
+            {
+                //UI thread - update directly
+                label1.Text = "Current Move: " + (turn ? "White" : "Server");
+            }
             turn = !turn;
         }
 
@@ -348,6 +417,87 @@ namespace NET_Project_Client
                 reader.Close();
                 connection.Close();
             }
+        }
+
+        private void ShowCustomMessageBox(string message,int row,int col,bool color)
+        {
+            // Create the panel for the message box
+            messageBoxPanel = new Panel
+            {
+                Size = new Size(300, 150),
+                Location = new Point((this.ClientSize.Width - 300) / 2, (this.ClientSize.Height - 150) / 2),
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
+            };
+
+            // Create the message label
+            messageLabel = new Label
+            {
+                Text = message,
+                Size = new Size(280, 60),
+                Location = new Point(10, 10),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            // Create buttons
+            buttonBishop = new Button
+            {
+                Text = "Bishop",
+                Size = new Size(75, 30),
+                Location = new Point(50, 80)
+            };
+            buttonBishop.Click += (s, e) => { HandleChoice("Bishop", row, col, color); };
+
+            buttonKnight = new Button
+            {
+                Text = "Knight",
+                Size = new Size(75, 30),
+                Location = new Point(125, 80)
+            };
+            buttonKnight.Click += (s, e) => { HandleChoice("Knight", row, col,color); };
+
+            buttonRook = new Button
+            {
+                Text = "Rook",
+                Size = new Size(75, 30),
+                Location = new Point(200, 80)
+            };
+            buttonRook.Click += (s, e) => { HandleChoice("Rook", row, col,color); };
+
+            // Add controls to the panel
+            messageBoxPanel.Controls.Add(messageLabel);
+            messageBoxPanel.Controls.Add(buttonBishop);
+            messageBoxPanel.Controls.Add(buttonKnight);
+            messageBoxPanel.Controls.Add(buttonRook);
+
+            // Add the panel to the form
+            this.Controls.Add(messageBoxPanel);
+            messageBoxPanel.BringToFront();
+        }
+
+        private void HandleChoice(string choice, int row, int col, bool color)
+        {
+            switch (choice)
+            {
+                case "Bishop":
+                    chessBoard.SetPieceAt(new Bishop(color, new Coordinate(row, col)), row, col);
+                    this.Invalidate();
+                    break;
+                case "Knight":
+                    chessBoard.SetPieceAt(new Knight(color, new Coordinate(row, col)), row, col);
+                    this.Invalidate();
+                    break;
+                case "Rook":
+                    chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
+                    this.Invalidate();
+                    break;
+                default:
+                    chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
+                    this.Invalidate();
+                    break;
+            }
+            // Remove the message box panel
+            this.Controls.Remove(messageBoxPanel);
         }
     }
 }
