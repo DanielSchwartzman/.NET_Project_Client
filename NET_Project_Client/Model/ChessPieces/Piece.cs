@@ -33,6 +33,11 @@ namespace NET_Project_Client.Model.ChessPieces
             return loc.y;
         }
 
+        public int getCol()
+        {
+            return loc.x;
+        }
+
         public bool getColor()
             { return color; }
 

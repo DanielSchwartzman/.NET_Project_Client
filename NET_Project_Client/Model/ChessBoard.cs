@@ -153,6 +153,31 @@ namespace NET_Project_Client.Model
             return false;
         }
 
+        public List<List<int>> CalculateMovesForServer()
+        {
+            List<List<int>> availableMoves = new List<List<int>>();
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    Piece p = chessBoard[i,j];
+                    if (p != null)
+                        if (p.getColor())
+                        {
+                            List<int> numbers = new List<int>();
+                            for (int k = 0; k < p.AvailableMoves.Count(); k++)
+                            {
+
+                                int number = (p.getRow() * 1000) + (p.getCol() * 100) + (p.AvailableMoves[k].y * 10) + p.AvailableMoves[k].x;
+                                numbers.Add(number);
+                            }
+                            availableMoves.Add(numbers);
+                        }
+                }
+            }
+            return availableMoves;
+        }
+
         private List<Coordinate> getBlockLocation(int kingRow, int kingCol, int trRow, int trCol)
         {
             List<Coordinate> result = new List<Coordinate>();
@@ -177,7 +202,7 @@ namespace NET_Project_Client.Model
 
                 result.Add(new Coordinate(currentRow, currentCol));
             }
-            if (result.Count() > 0) ;
+            if (result.Count() > 0)
                 result.RemoveAt(0);
 
             return result;

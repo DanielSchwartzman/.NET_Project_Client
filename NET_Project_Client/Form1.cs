@@ -13,6 +13,7 @@ using System.Timers;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace NET_Project_Client
 {
@@ -33,6 +34,7 @@ namespace NET_Project_Client
 
         bool toDraw = false;
         bool animationLock =false;
+        bool ServerReplyLock = false;
 
         int clickrow;
         int clickcol;
@@ -214,14 +216,13 @@ namespace NET_Project_Client
             {
                 int clickedColumn = e.X / squareWidth;
                 int clickedRow = e.Y / squareHeight;
-
-                OnSquareClick(clickedRow, clickedColumn);
+                OnSquareClick(clickedRow, clickedColumn);   
             }
         }
 
         private void OnSquareClick(int row, int col)
         {
-            if (!animationLock)
+            if (!animationLock || ServerReplyLock)
             {
                 if (row >= 0 && row <= 7 && col <= 3 && col >= 0)
                 {
@@ -257,7 +258,7 @@ namespace NET_Project_Client
                                 ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
                             }
                             switchTurn();
-                            ResetTimer();
+                            
                         }
                         else
                         {
@@ -292,7 +293,7 @@ namespace NET_Project_Client
             aTimer.Start(); // Restart the timer
         }
 
-        private void switchTurn()
+        private async void switchTurn()
         {
             if (label1.InvokeRequired)
             {
@@ -306,7 +307,84 @@ namespace NET_Project_Client
                 //UI thread - update directly
                 label1.Text = "Current Move: " + (turn ? "White" : "Server");
             }
+
+            if (!turn) //Server's Turn - API call to server
+            {
+                ServerReplyLock = true;
+                turn = !turn;
+                List<List<int>> availableMovesForServer = chessBoard.CalculateMovesForServer();
+                ChessClient chessClient = new ChessClient();
+                if (!animationLock)
+                {
+                    try
+                    {
+                        var result = await chessClient.GetRandomMove(availableMovesForServer);
+
+                        if (result != null)
+                        {
+                            //MessageBox.Show($"Random move selected: Piece {result.pieceIndex} -> Move {result.moveIndex}: {result.move}");
+                            // Apply the move to the chessboard
+                            int moveparsed = result.move;
+                            ApplyMoveFromServer(moveparsed);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Failed to retrieve a random move.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
+                }
+                else
+                {
+                    // Set up a mechanism to check when the animation is done and call OnSquareClick then
+                    await Task.Run(async () =>
+                    {
+                        // Continuously check if the animationLock is released
+                        while (animationLock)
+                        {
+                            await Task.Delay(100); // Small delay to prevent busy-waiting
+                        }
+                        
+                    });
+
+                    try
+                    {
+                        var result = await chessClient.GetRandomMove(availableMovesForServer);
+
+                        if (result != null)
+                        {
+                            //MessageBox.Show($"Random move selected: Piece {result.pieceIndex} -> Move {result.moveIndex}: {result.move}");
+                            // Apply the move to the chessboard
+                            int moveparsed = result.move;
+                            ApplyMoveFromServer(moveparsed);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
+                }
+            }
+            ResetTimer();
+        }
+
+        private void ApplyMoveFromServer(int move)
+        {
+            
+            // Assuming the move is a 4-digit number
+            int fromRow; // First digit
+            fromRow = (move >= 1000)? move / 1000:0;
+            int fromCol = (move / 100) % 10; // Second digit
+            int toRow = (move / 10) % 10; // Third digit
+            int toCol = move % 10; // Fourth digit
+            //MessageBox.Show("Animation lock is: " +animationLock);
+            OnSquareClick(fromRow, fromCol);
+            OnSquareClick(toRow, toCol);
             turn = !turn;
+            ServerReplyLock = false;
         }
 
         // Start animation when moving a piece
