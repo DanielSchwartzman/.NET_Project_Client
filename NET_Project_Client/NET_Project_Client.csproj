@@ -142,6 +142,7 @@
     <Compile Include="Model\ChessPieces\Pawn.cs" />
     <Compile Include="Model\ChessPieces\Piece.cs" />
     <Compile Include="Model\ChessPieces\Rook.cs" />
+    <Compile Include="Model\Client.cs" />
     <Compile Include="Model\Coordinate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

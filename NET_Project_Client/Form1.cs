@@ -63,7 +63,7 @@ namespace NET_Project_Client
         public Form1(int PlayerID)
         {
             InitializeComponent();
-
+            MessageBox.Show("PLAYER ID IS: " + PlayerID);
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
@@ -79,6 +79,7 @@ namespace NET_Project_Client
 
             InsertNewPlayerToDB(PlayerID);
             ReadLastID();
+            
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
@@ -91,6 +92,7 @@ namespace NET_Project_Client
             aTimer = new System.Timers.Timer();
             aTimer.Elapsed += OnTimedEvent;
             ResetTimer();
+            
         }
 
         private void OnTimedEvent(Object source, ElapsedEventArgs e)
