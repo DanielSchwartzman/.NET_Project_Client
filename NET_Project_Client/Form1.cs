@@ -32,6 +32,7 @@ namespace NET_Project_Client
         private static double elapsedTime = 0;
 
         bool toDraw = false;
+        bool animationLock =false;
 
         int clickrow;
         int clickcol;
@@ -220,46 +221,49 @@ namespace NET_Project_Client
 
         private void OnSquareClick(int row, int col)
         {
-            if (row >= 0 && row <= 7 && col <= 3 && col >= 0)
+            if (!animationLock)
             {
-                if (chessBoard.chessBoard[row, col] != null && click == 0)
+                if (row >= 0 && row <= 7 && col <= 3 && col >= 0)
                 {
-                    if (chessBoard.chessBoard[row, col].getColor() == turn)
+                    if (chessBoard.chessBoard[row, col] != null && click == 0)
                     {
-                        //MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
-                        clickrow = row;
-                        clickcol = col;
-                        click = 1;
-                    }
-                }
-                else if (click == 1)
-                {
-                    bool ok = false;
-                    Piece p = chessBoard.chessBoard[clickrow, clickcol];
-                    int length = p.AvailableMoves.Count();
-                    for (int i = 0; i < length; i++)
-                    {
-                        if (p.AvailableMoves[i].Equals(new Coordinate(row, col)))
+                        if (chessBoard.chessBoard[row, col].getColor() == turn)
                         {
-                            ok = true;
+                            //MessageBox.Show(chessBoard.chessBoard[row, col].AvailableMovesToString());
+                            clickrow = row;
+                            clickcol = col;
+                            click = 1;
                         }
                     }
-                    if (ok)
+                    else if (click == 1)
                     {
-                        // Initiate animation
-                        StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
-                        click = 0;
-                        if (IsPawnPromoting(p,row,col))
+                        bool ok = false;
+                        Piece p = chessBoard.chessBoard[clickrow, clickcol];
+                        int length = p.AvailableMoves.Count();
+                        for (int i = 0; i < length; i++)
                         {
-                            ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
+                            if (p.AvailableMoves[i].Equals(new Coordinate(row, col)))
+                            {
+                                ok = true;
+                            }
                         }
-                        switchTurn();
-                        ResetTimer();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        click = 0;
+                        if (ok)
+                        {
+                            // Initiate animation
+                            StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                            click = 0;
+                            if (IsPawnPromoting(p,row,col))
+                            {
+                                ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
+                            }
+                            switchTurn();
+                            ResetTimer();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            click = 0;
+                        }
                     }
                 }
             }
@@ -315,6 +319,7 @@ namespace NET_Project_Client
             animationStartTime = DateTime.Now;
 
             // Start the animation timer
+            animationLock = true;
             animationTimer.Start();
         }
 
@@ -330,6 +335,7 @@ namespace NET_Project_Client
                 // Animation is complete
                 animationProgress = 1.0f;
                 animationTimer.Stop();
+                animationLock = false;
                 if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth)))
                     victory();
                 if (chessBoard.check)
