@@ -85,5 +85,10 @@ namespace NET_Project_Client
             selectedPid = int.Parse(numberPart);
             addComboboxItems(selectedPid);
         }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
