@@ -44,7 +44,7 @@ namespace NET_Project_Client
 
             if (clients != null && clients.Any())
             {
-                button1Lock = false;
+                button1Lock = true;
                 // Bind the data to the ComboBox
                 comboBox3.DataSource = clientDisplays;
                 comboBox3.DisplayMember = "DisplayName";  // Display client names
@@ -53,7 +53,7 @@ namespace NET_Project_Client
             }
             else
             {
-                button1Lock = true;
+                button1Lock = false;
                 MessageBox.Show("No clients found or failed to retrieve data.");
             }
             addComboboxUserNames();
@@ -61,7 +61,7 @@ namespace NET_Project_Client
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (!button1Lock)
+            if (button1Lock)
             {
                 Form1 form1 = new Form1(userPid);
                 form1.Show();

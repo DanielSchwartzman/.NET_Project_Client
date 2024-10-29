@@ -14,6 +14,9 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using Newtonsoft.Json;
+using System.Net.Http;
 
 namespace NET_Project_Client
 {
@@ -21,6 +24,8 @@ namespace NET_Project_Client
     {
         private string connectionstr = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\GitRep\\NET_Project_Client\\NET_Project_Client\\Database1.mdf;Integrated Security=True";
         int gameID;
+        int playerID;
+        Client client;
 
         ChessBoard chessBoard;
         int squareWidth;
@@ -63,12 +68,12 @@ namespace NET_Project_Client
         public Form1(int PlayerID)
         {
             InitializeComponent();
-            MessageBox.Show("PLAYER ID IS: " + PlayerID);
+            //MessageBox.Show("PLAYER ID IS: " + PlayerID);
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
             this.MouseMove += new MouseEventHandler(Form1_MouseMove);
-
+            this.playerID =PlayerID;
             // Initialize animation timer
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 16; // ~60 FPS
@@ -78,17 +83,18 @@ namespace NET_Project_Client
             label1.Text = "Current Move: White";
 
             InsertNewPlayerToDB(PlayerID);
+
             ReadLastID();
             
         }
 
-        private void Form1_Load(object sender, System.EventArgs e)
+        private async void Form1_Load(object sender, System.EventArgs e)
         {
             chessBoard = new ChessBoard(this, true);
             click = 0;
             turn = false;
             bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
-
+            client = await GetClientAsync(playerID);
             aTimer = new System.Timers.Timer();
             aTimer.Elapsed += OnTimedEvent;
             ResetTimer();
@@ -254,6 +260,9 @@ namespace NET_Project_Client
                         {
                             // Initiate animation
                             StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                            label3.Invoke(new MethodInvoker(delegate {
+                                label3.Text = "The move: [" + clickrow + " , " + clickcol + "]  ->  " + "[" + row + " , " + col + "]";
+                            }));
                             click = 0;
                             if (IsPawnPromoting(p,row,col))
                             {
@@ -314,10 +323,11 @@ namespace NET_Project_Client
             {
                 ServerReplyLock = true;
                 turn = !turn;
-                List<List<int>> availableMovesForServer = chessBoard.CalculateMovesForServer();
                 ChessClient chessClient = new ChessClient();
+                ResetTimer();
                 if (!animationLock)
                 {
+                    List<List<int>> availableMovesForServer = chessBoard.CalculateMovesForServer();
                     try
                     {
                         var result = await chessClient.GetRandomMove(availableMovesForServer);
@@ -354,6 +364,7 @@ namespace NET_Project_Client
 
                     try
                     {
+                        List<List<int>> availableMovesForServer = chessBoard.CalculateMovesForServer();
                         var result = await chessClient.GetRandomMove(availableMovesForServer);
 
                         if (result != null)
@@ -370,7 +381,7 @@ namespace NET_Project_Client
                     }
                 }
             }
-            ResetTimer();
+            
         }
 
         private void ApplyMoveFromServer(int move)
@@ -382,6 +393,9 @@ namespace NET_Project_Client
             int fromCol = (move / 100) % 10; // Second digit
             int toRow = (move / 10) % 10; // Third digit
             int toCol = move % 10; // Fourth digit
+            label3.Invoke(new MethodInvoker(delegate {
+                label3.Text = "The move: [" + fromRow + " , " + fromCol + "]  ->  " + "[" + toRow + " , " + toCol + "]";
+            }));
             //MessageBox.Show("Animation lock is: " +animationLock);
             OnSquareClick(fromRow, fromCol);
             OnSquareClick(toRow, toCol);
@@ -504,7 +518,35 @@ namespace NET_Project_Client
                 connection.Close();
             }
         }
+        // Get Client from ID
+        internal async Task<Client> GetClientAsync(int PlayerID)
+        {
+            HttpClient client = new HttpClient();
+            try
+            {
+                // Replace with your API's base URL
+                string apiUrl = "http://localhost:5177/api/Clients/" +PlayerID;
 
+                // Send the GET request to the API
+                HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+                response.EnsureSuccessStatusCode(); // Throws if not a success code (e.g., 404, 500)
+
+                // Get the response content as a string
+                string responseData = await response.Content.ReadAsStringAsync();
+
+                // Deserialize the JSON data into a list of clients
+                Client nclient = JsonConvert.DeserializeObject<Client>(responseData);
+
+                return nclient;
+            }
+            catch (HttpRequestException e)
+            {
+                //MessageBox.Show($"Request error: {e.Message}");
+                return new Client();
+            }
+        }
+        //Promotion Msessage Box Code
         private void ShowCustomMessageBox(string message,int row,int col,bool color)
         {
             // Create the panel for the message box
