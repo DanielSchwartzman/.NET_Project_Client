@@ -95,6 +95,7 @@ namespace NET_Project_Client
             turn = false;
             bitmap = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
             client = await GetClientAsync(playerID);
+            UpdateClientLabels(client.Name, client.ID.ToString(), client.Phone, client.Country);
             aTimer = new System.Timers.Timer();
             aTimer.Elapsed += OnTimedEvent;
             ResetTimer();
@@ -546,6 +547,25 @@ namespace NET_Project_Client
                 return new Client();
             }
         }
+        //Upadte Client Label data
+        private void UpdateClientLabels(string name,string id,string phone,string country)
+        {
+            label5.Invoke(new MethodInvoker(delegate {
+                label5.Text = name;
+            }));
+
+            label7.Invoke(new MethodInvoker(delegate {
+                label7.Text = id;
+            }));
+
+            label9.Invoke(new MethodInvoker(delegate {
+                label9.Text = phone;
+            }));
+
+            label11.Invoke(new MethodInvoker(delegate {
+                label11.Text = country;
+            }));
+        }
         //Promotion Msessage Box Code
         private void ShowCustomMessageBox(string message,int row,int col,bool color)
         {
@@ -627,5 +647,6 @@ namespace NET_Project_Client
             // Remove the message box panel
             this.Controls.Remove(messageBoxPanel);
         }
+
     }
 }
