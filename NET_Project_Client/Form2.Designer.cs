@@ -57,7 +57,7 @@
             // button2
             // 
             this.button2.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Bold);
-            this.button2.Location = new System.Drawing.Point(354, 163);
+            this.button2.Location = new System.Drawing.Point(402, 163);
             this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(172, 58);
@@ -72,7 +72,7 @@
             this.comboBox1.Location = new System.Drawing.Point(453, 66);
             this.comboBox1.Margin = new System.Windows.Forms.Padding(2);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(136, 21);
+            this.comboBox1.Size = new System.Drawing.Size(168, 21);
             this.comboBox1.TabIndex = 2;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
@@ -82,7 +82,7 @@
             this.comboBox2.Location = new System.Drawing.Point(453, 123);
             this.comboBox2.Margin = new System.Windows.Forms.Padding(2);
             this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(136, 21);
+            this.comboBox2.Size = new System.Drawing.Size(168, 21);
             this.comboBox2.TabIndex = 3;
             this.comboBox2.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
             // 
@@ -140,7 +140,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Verdana", 20F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))));
-            this.label5.Location = new System.Drawing.Point(294, 9);
+            this.label5.Location = new System.Drawing.Point(326, 9);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(295, 32);
             this.label5.TabIndex = 9;
@@ -159,7 +159,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 366);
+            this.ClientSize = new System.Drawing.Size(660, 366);
             this.Controls.Add(this.comboBox3);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);

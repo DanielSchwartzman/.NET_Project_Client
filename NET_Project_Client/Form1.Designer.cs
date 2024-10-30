@@ -75,7 +75,7 @@ namespace NET_Project_Client
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(212, 326);
+            this.label2.Location = new System.Drawing.Point(211, 318);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(54, 13);
@@ -85,7 +85,7 @@ namespace NET_Project_Client
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(214, 345);
+            this.label3.Location = new System.Drawing.Point(212, 344);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(54, 13);
             this.label3.TabIndex = 3;
@@ -132,7 +132,7 @@ namespace NET_Project_Client
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(0, 25);
             this.label11.TabIndex = 7;
-            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label10
             // 

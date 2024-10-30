@@ -15,5 +15,10 @@ namespace NET_Project_Client.Model
 
         public string Phone { get; set; }
         public string Country { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Name} (ID: {ID})";
+        }
     }
 }

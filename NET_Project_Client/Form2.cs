@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.LinkLabel;
 using System.Net.Http;
-using Newtonsoft.Json; // For JSON deserialization, install via NuGet if not present
+using Newtonsoft.Json;
 
 namespace NET_Project_Client
 {
@@ -35,28 +35,34 @@ namespace NET_Project_Client
         private async void Form2_Load(object sender, System.EventArgs e)
         {
             List<Client> clients = await GetClientsAsync();
+            List<string> customNames = clients.Select(client => $"{client.Name} (ID: {client.ID})").ToList();
             var clientDisplays = clients.Select(client => new
             {
                 DisplayName = $"{client.Name} (ID: {client.ID})",
                 ID = client.ID,
                 Name = client.Name
-            }).ToList();
+            }).ToList();//for combobox 3 
 
             if (clients != null && clients.Any())
             {
                 button1Lock = true;
-                // Bind the data to the ComboBox
+                // Bind the data to ComboBox3
                 comboBox3.DataSource = clientDisplays;
                 comboBox3.DisplayMember = "DisplayName";  // Display client names
                 comboBox3.ValueMember = "ID";      // Use client ID as the value
                 userPid = (int)clients.ElementAt(0).ID;
+
+                // Bind the data to ComboBox1
+                comboBox1.DataSource = customNames;
+                selectedPid = (int)clients.ElementAt(0).ID;
+                addComboboxItems(selectedPid);
             }
             else
             {
                 button1Lock = false;
                 MessageBox.Show("No clients found or failed to retrieve data.");
             }
-            addComboboxUserNames();
+            //addComboboxUserNames();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -71,21 +77,27 @@ namespace NET_Project_Client
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Form3 form3 = new Form3(selectedGid);
-            form3.Show();
+            if (!comboBox2.SelectedItem.ToString().Equals("No recorded games"))
+            {
+                Form3 form3 = new Form3(selectedGid);
+                form3.Show();
+            }
         }
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string cb = comboBox2.SelectedItem.ToString();
-            string numberPart = cb.Substring(cb.IndexOf(": ") + 2);
-            selectedGid = int.Parse(numberPart);
+            if (!comboBox2.SelectedItem.ToString().Equals("No recorded games"))
+            {
+                string cb = comboBox2.SelectedItem.ToString();
+                string numberPart = cb.Substring(cb.IndexOf(": ") + 2);
+                selectedGid = int.Parse(numberPart);
+            }
         }
 
         private void addComboboxItems(int PID)
         {
             string queryString = "SELECT * FROM [dbo].[GamesPlayed] WHERE Pid="+PID+";";
-
+            List<string> customGid= new List<string>();
             using (SqlConnection connection = new SqlConnection(connectionstr))
             {
                 SqlCommand command = new SqlCommand(queryString, connection);
@@ -99,8 +111,13 @@ namespace NET_Project_Client
                         int gid = reader.GetInt32(0); // Assuming Gid is the first column
                         int pid = reader.GetInt32(1); // Pid column // Name column
 
-                        comboBox2.Items.Add("Game ID: "+gid);
+                        customGid.Add("Game ID: " + gid);
                     }
+                    if (customGid.Count() > 0)
+                        comboBox2.DataSource = customGid;
+                    else
+                        comboBox2.DataSource = new List<string> {"No recorded games"};
+
                 }
                 connection.Close();
             }
@@ -113,10 +130,15 @@ namespace NET_Project_Client
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string cb = comboBox1.SelectedItem.ToString();
-            string numberPart = cb.Substring(cb.IndexOf(": ") + 2);
-            selectedPid = int.Parse(numberPart);
-            addComboboxItems(selectedPid);
+            if (comboBox1.SelectedValue != null)
+            {
+                string cb = comboBox1.SelectedItem.ToString();
+                int startIndex = cb.IndexOf("ID: ") + 4;
+                int endIndex = cb.IndexOf(")", startIndex);
+                string idString = cb.Substring(startIndex, endIndex - startIndex).Trim();
+                selectedPid = int.Parse(idString);
+                addComboboxItems(selectedPid);
+            }
         }
 
         private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
@@ -152,7 +174,6 @@ namespace NET_Project_Client
             }
             catch (HttpRequestException e)
             {
-                //MessageBox.Show($"Request error: {e.Message}");
                 return new List<Client>();
             }
         }
