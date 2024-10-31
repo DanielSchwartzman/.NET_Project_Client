@@ -32,6 +32,7 @@ namespace NET_Project_Client
         int squareHeight;
         int click;
         bool turn;
+        Dictionary<int, int> promotions = new Dictionary<int, int>();
 
         private static System.Timers.Timer aTimer;
         private static double timerInterval = 20000;
@@ -48,6 +49,8 @@ namespace NET_Project_Client
         private const int SIZE = 2;
         private int x = -SIZE;
         private int y = -SIZE;
+
+        private int promoMove= 0;
 
         // Animation related variables
         private System.Windows.Forms.Timer animationTimer;
@@ -74,6 +77,7 @@ namespace NET_Project_Client
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
             this.MouseMove += new MouseEventHandler(Form1_MouseMove);
             this.playerID =PlayerID;
+            this.FormClosed += Form1_FormClosed;
             // Initialize animation timer
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 16; // ~60 FPS
@@ -142,8 +146,14 @@ namespace NET_Project_Client
 
             if (result == DialogResult.OK)
             {
+
                 this.Close(); // Close the current form
             }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            UpdatePromoInDB(promotions);
         }
 
         static double GetTimeLeft(Form form1)
@@ -167,6 +177,7 @@ namespace NET_Project_Client
                 MessageBox.Show("Victory for Blacks");
             else
                 MessageBox.Show("Victory for Whites");
+
             this.Close();
         }
 
@@ -267,6 +278,7 @@ namespace NET_Project_Client
                             click = 0;
                             if (IsPawnPromoting(p,row,col))
                             {
+                                promoMove=chessBoard.getMoveId();
                                 ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
                             }
                             switchTurn();
@@ -274,7 +286,7 @@ namespace NET_Project_Client
                         }
                         else
                         {
-                            MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            //MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             click = 0;
                         }
                     }
@@ -503,10 +515,10 @@ namespace NET_Project_Client
             }
         }
 
-        public void InsertMoveIntoDB(int moveID, int fromRow, int fromCol, int toRow, int toCol)
+        public void InsertMoveIntoDB(int moveID, int fromRow, int fromCol, int toRow, int toCol,int isPromo,int promoteTo)
         {
             int rep = (((((fromRow * 10) + fromCol) * 10) + toRow) * 10) + toCol;
-            string queryString = "INSERT INTO [dbo].[GameOrder] (Gid, MoveID, TheMove) VALUES(" + gameID + ", " + moveID + ", " + rep +");";
+            string queryString = "INSERT INTO [dbo].[GameOrder] (Gid, MoveID, TheMove, IsPromoting, PromoteTo) VALUES(" + gameID + ", " + moveID + ", " + rep + ", " + isPromo + ", " + promoteTo + ");";
             using (SqlConnection connection = new SqlConnection(
                        connectionstr))
             {
@@ -518,6 +530,39 @@ namespace NET_Project_Client
                 reader.Close();
                 connection.Close();
             }
+        }
+
+        public void UpdatePromoInDB(Dictionary<int,int> promotions)
+        {
+            if (promotions.Count()>0)
+            {
+                foreach (KeyValuePair<int, int> promo in promotions)
+                {
+                    string queryString = "UPDATE [dbo].[GameOrder] SET IsPromoting = 1, PromoteTo = @promoteTo WHERE Gid = @gameID AND MoveID = @moveID;";
+                    try
+                    {
+                        using (SqlConnection connection = new SqlConnection(connectionstr))
+                        {
+                            SqlCommand command = new SqlCommand(queryString, connection);
+                            command.Parameters.AddWithValue("@promoteTo", promo.Value);
+                            command.Parameters.AddWithValue("@gameID", gameID);
+                            command.Parameters.AddWithValue("@moveID", promo.Key);
+                            connection.Open();
+                            int rowsAffected = command.ExecuteNonQuery();
+                            connection.Close();
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        Console.WriteLine("SQL Error: " + ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error: " + ex.Message);
+                    }
+
+                }
+            } 
         }
         // Get Client from ID
         internal async Task<Client> GetClientAsync(int PlayerID)
@@ -629,21 +674,26 @@ namespace NET_Project_Client
             {
                 case "Bishop":
                     chessBoard.SetPieceAt(new Bishop(color, new Coordinate(row, col)), row, col);
+                    promotions.Add(promoMove,1);
                     this.Invalidate();
                     break;
                 case "Knight":
                     chessBoard.SetPieceAt(new Knight(color, new Coordinate(row, col)), row, col);
+                    promotions.Add(promoMove, 2);
                     this.Invalidate();
                     break;
                 case "Rook":
                     chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
+                    promotions.Add(promoMove, 3);
                     this.Invalidate();
                     break;
                 default:
                     chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
+                    promotions.Add(promoMove, 3);
                     this.Invalidate();
                     break;
             }
+            
             // Remove the message box panel
             this.Controls.Remove(messageBoxPanel);
         }

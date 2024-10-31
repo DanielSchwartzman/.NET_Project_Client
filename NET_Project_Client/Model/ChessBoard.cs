@@ -18,6 +18,8 @@ namespace NET_Project_Client.Model
         Form view;
         int move = 1;
         bool type;
+        int isPromo = 0;
+        int promoteTo = 9;
 
         public ChessBoard(Form f, bool type)
         {
@@ -30,6 +32,22 @@ namespace NET_Project_Client.Model
             this.type = type;
         }
 
+        private bool IsPawnPromoting(Piece p, int row, int col)
+        {
+            if (p is Pawn)
+            {
+                if (p.getRow() == 1 && row == 0 && p.getColor() == turn)
+                {
+                    return true;
+                }
+                if (p.getRow() == 6 && row == 7 && p.getColor() == turn)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool MakeMove(Coordinate begin, Coordinate end)
         {
             bool victory = false;
@@ -39,7 +57,10 @@ namespace NET_Project_Client.Model
             chessBoard[begin.y, begin.x] = null;
 
             if(type)
-                SaveMoveToDB(begin, end);
+            {
+                SaveMoveToDB(begin, end, isPromo, promoteTo);
+            }
+                
 
             CalculateMovesForAllPieces();
             removeIllegalMovesForKing();
@@ -220,12 +241,16 @@ namespace NET_Project_Client.Model
 
 
 
-        private void SaveMoveToDB(Coordinate begin, Coordinate end)
+        private void SaveMoveToDB(Coordinate begin, Coordinate end,int isPromo, int promoteTo)
         {
-            ((Form1)view).InsertMoveIntoDB(move, begin.y, begin.x, end.y, end.x);
+            ((Form1)view).InsertMoveIntoDB(move, begin.y, begin.x, end.y, end.x,isPromo,promoteTo);
+        }
+        public int getMoveId()
+        {
+            return move;
         }
 
-        private void CalculateMovesForAllPieces()
+        public void CalculateMovesForAllPieces()
         {
             for (int i = 0; i <= 7; i++)
             {
@@ -233,6 +258,11 @@ namespace NET_Project_Client.Model
                     if (chessBoard[i,j] != null)
                         chessBoard[i, j].CalculateMoves(chessBoard);
             }
+        }
+
+        public void RefreshMoveForPiece(int row, int col)
+        {
+         chessBoard[row, col].CalculateMoves(chessBoard);
         }
 
         private void InitializeBoard()

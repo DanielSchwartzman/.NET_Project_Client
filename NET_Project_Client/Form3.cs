@@ -27,8 +27,15 @@ namespace NET_Project_Client
         int squareHeight;
         int click;
         bool turn;
+        
 
         List<int> allMoves = new List<int>();
+        List<int> allIsPromo = new List<int>();
+        List<int> allPromoteTo = new List<int>();
+
+        int allIsPromoLength = 0;
+        int allPromoteToLength = 0;
+        int logicalIndexer = 0;
 
         int clicked = 0;
 
@@ -49,7 +56,7 @@ namespace NET_Project_Client
         private float animationProgress;
         private const int animationDuration = 500; // 500 ms
         private DateTime animationStartTime;
-        private int currentMoveIndex = 0;
+        private int currentMoveIndex = 1;
 
         public Form3(int Gid)
         {
@@ -73,6 +80,8 @@ namespace NET_Project_Client
             click = 0;
             turn = false;
             loadDataFromDB();
+            allIsPromoLength = allIsPromo.Count();
+            allPromoteToLength = allPromoteTo.Count();
             StartGameReplay();
         }
 
@@ -141,21 +150,23 @@ namespace NET_Project_Client
                 if (currentMoveIndex < allMoves.Count())
                 {
                     // Get the next move
+                    int temp = allMoves[currentMoveIndex];
                     int fromRow, fromCol, toRow, toCol;
 
-                    toCol = allMoves[currentMoveIndex] % 10;
-                    allMoves[currentMoveIndex] /= 10;
+                    toCol = temp % 10;
+                    temp /= 10;
 
-                    toRow = allMoves[currentMoveIndex] % 10;
-                    allMoves[currentMoveIndex] /= 10;
+                    toRow = temp % 10;
+                    temp /= 10;
 
-                    fromCol = allMoves[currentMoveIndex] % 10;
-                    allMoves[currentMoveIndex] /= 10;
+                    fromCol = temp % 10;
+                    temp /= 10;
 
-                    fromRow = allMoves[currentMoveIndex] > 0 ? allMoves[currentMoveIndex] : 0;
+                    fromRow = temp > 0 ? temp : 0;
 
                     // Start the move animation
                     StartMoveAnimation(new Coordinate(fromRow, fromCol), new Coordinate(toRow, toCol));
+                    
 
                     // Increment to the next move
                     currentMoveIndex++;
@@ -187,30 +198,14 @@ namespace NET_Project_Client
                 {
                     bool ok = false;
                     Piece p = chessBoard.chessBoard[clickrow, clickcol];
-                    int length = p.AvailableMoves.Count();
-                    for (int i = 0; i < length; i++)
-                    {
-                        if (p.AvailableMoves[i].Equals(new Coordinate(row, col)))
-                        {
-                            ok = true;
-                        }
-                    }
-                    if (ok)
-                    {
-                        bool res = chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
-                        this.Invalidate();
+                    bool res = chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                    this.Invalidate();
                         click = 0;
-                        switchTurn();
-                        if (res)
-                        {
-                            victory();
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        click = 0;
-                    }
+                    switchTurn();
+                    if (res)
+                     {
+                        victory();
+                     }
                 }
             }
         }
@@ -265,6 +260,38 @@ namespace NET_Project_Client
             {
                 OnSquareClick(start.y, start.x);
                 OnSquareClick(end.y, end.x);
+                if (allIsPromo[currentMoveIndex-1] == 1 && currentMoveIndex <= allIsPromoLength)
+                {
+                    if (allPromoteTo[currentMoveIndex-1] != 9 && currentMoveIndex <= allPromoteToLength)
+                    {
+                        int nrow = (allMoves[currentMoveIndex-1] % 100) / 10;
+                        int ncol = allMoves[currentMoveIndex-1] % 10;
+                        Piece np = chessBoard.GetPieceAt(end.y, end.x);
+                        switch (allPromoteTo[currentMoveIndex-1])
+                        {
+                            case 1:
+                                chessBoard.SetPieceAt(new Bishop(np.getColor(), new Coordinate(nrow, ncol)), nrow, ncol);
+                                chessBoard.RefreshMoveForPiece(nrow, ncol);
+                                this.Invalidate();
+                                break;
+                            case 2:
+                                chessBoard.SetPieceAt(new Knight(np.getColor(), new Coordinate(nrow, ncol)), nrow, ncol);
+                                chessBoard.RefreshMoveForPiece(nrow, ncol);
+                                this.Invalidate();
+                                break;
+                            case 3:
+                                chessBoard.SetPieceAt(new Rook(np.getColor(), new Coordinate(nrow, ncol)), nrow, ncol);
+                                chessBoard.RefreshMoveForPiece(nrow, ncol);
+                                this.Invalidate();
+                                break;
+                            default:
+                                chessBoard.SetPieceAt(new Rook(np.getColor(), new Coordinate(nrow, ncol)), nrow, ncol);
+                                chessBoard.RefreshMoveForPiece(nrow, ncol);
+                                this.Invalidate();
+                                break;
+                        }
+                    }
+                }
 
                 movingPiece = null;
                 this.Invalidate();
@@ -288,7 +315,17 @@ namespace NET_Project_Client
                         int gid = reader.GetInt32(0); // Assuming Gid is the first column
                         int moveID = reader.GetInt32(1); // Pid column
                         int theMove = reader.GetInt32(2); // Name column
-
+                        bool isPromo = reader.GetBoolean(3);
+                        int promoteTo = reader.GetInt32(4);
+                        if(isPromo)
+                        {
+                            allIsPromo.Add(1);
+                        }
+                        else
+                        {
+                            allIsPromo.Add(0);
+                        }
+                        allPromoteTo.Add(promoteTo);
                         allMoves.Add(theMove);
                     }
                 }
