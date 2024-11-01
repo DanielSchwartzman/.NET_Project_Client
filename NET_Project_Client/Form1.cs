@@ -17,6 +17,7 @@ using System.Threading;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 
 namespace NET_Project_Client
 {
@@ -26,6 +27,7 @@ namespace NET_Project_Client
         int gameID;
         int playerID;
         Client client;
+        Form1 formInstance;
 
         ChessBoard chessBoard;
         int squareWidth;
@@ -36,6 +38,7 @@ namespace NET_Project_Client
 
         private static System.Timers.Timer aTimer;
         private static double timerInterval = 20000;
+        private double timerInterval2 = 20000;
         private static double elapsedTime = 0;
 
         bool toDraw = false;
@@ -68,20 +71,23 @@ namespace NET_Project_Client
         private Button buttonBishop;
         private Button buttonKnight;
 
-        public Form1(int PlayerID)
+        public Form1(int PlayerID, int timerValue)
         {
             InitializeComponent();
-            //MessageBox.Show("PLAYER ID IS: " + PlayerID);
+            formInstance = this;
             this.Load += new EventHandler(Form1_Load);
             this.Paint += new PaintEventHandler(Form1_Paint);
             this.MouseClick += new MouseEventHandler(Form1_MouseClick);
             this.MouseMove += new MouseEventHandler(Form1_MouseMove);
             this.playerID =PlayerID;
             this.FormClosed += Form1_FormClosed;
+            this.FormClosing += Form1_FormClosing;
             // Initialize animation timer
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = 16; // ~60 FPS
             animationTimer.Tick += new EventHandler(AnimateMove);
+
+            timerInterval2 = timerValue * 1000;
 
             this.DoubleBuffered = true;
             label1.Text = "Current Move: White";
@@ -110,7 +116,7 @@ namespace NET_Project_Client
         {
             elapsedTime += aTimer.Interval;
 
-            if (elapsedTime >= timerInterval)
+            if (elapsedTime >= timerInterval2)
             {
                 aTimer.Stop();
                 if (this.InvokeRequired)
@@ -125,19 +131,46 @@ namespace NET_Project_Client
                 }
             }
 
-            if (label2.InvokeRequired)
+            if (!label2.IsDisposed && !this.IsDisposed)
             {
-                //background thread - Invoke to call this on the UI thread
-                label2.Invoke(new MethodInvoker(delegate {
-                    label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
-                }));
-            }
-            else
-            {
-                //UI thread - update directly
-                label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
+                if (label2.InvokeRequired)
+                {
+                    label2.Invoke(new MethodInvoker(delegate {
+                        // Check again within the delegate
+                        if (!label2.IsDisposed && !this.IsDisposed)
+                        {
+                            try
+                            {
+                                label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                            }
+                        }
+                    }));
+                }
+                else
+                {
+                    // UI thread - update directly
+                    try
+                    {
+                        label2.Text = "Time Left: " + (int)(GetTimeLeft(this) / 1000);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
+                }
             }
         }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            label2.Dispose();
+            aTimer.Stop();
+            aTimer.Dispose();
+            
+        }
+
         private void ShowTimeoutMessage()
         {
             this.Enabled = false;
@@ -156,9 +189,9 @@ namespace NET_Project_Client
             UpdatePromoInDB(promotions);
         }
 
-        static double GetTimeLeft(Form form1)
+        public double GetTimeLeft(Form form1)
         {
-            double timeLeft = timerInterval - elapsedTime;
+            double  timeLeft = timerInterval2 - elapsedTime;
 
             if (timeLeft > 0)
             {

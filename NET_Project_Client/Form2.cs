@@ -20,6 +20,7 @@ namespace NET_Project_Client
         int selectedGid;
         int selectedPid;
         int userPid;
+        int timerValue = 20;
         string selectedName;
         private string connectionstr = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\GitRep\\NET_Project_Client\\NET_Project_Client\\Database1.mdf;Integrated Security=True";
         private static readonly HttpClient client = new HttpClient();
@@ -34,6 +35,7 @@ namespace NET_Project_Client
 
         private async void Form2_Load(object sender, System.EventArgs e)
         {
+            addTimerValuesToDropBox();
             List<Client> clients = await GetClientsAsync();
             List<string> customNames = clients.Select(client => $"{client.Name} (ID: {client.ID})").ToList();
             var clientDisplays = clients.Select(client => new
@@ -69,7 +71,7 @@ namespace NET_Project_Client
         {
             if (button1Lock)
             {
-                Form1 form1 = new Form1(userPid);
+                Form1 form1 = new Form1(userPid,timerValue);
                 form1.Show();
             }
             
@@ -128,6 +130,16 @@ namespace NET_Project_Client
             comboBox1.Items.Add("Shmulik ID: " + 1);
         }
 
+        private void addTimerValuesToDropBox()
+        {
+            comboBox4.Items.Add("10 seconds");
+            comboBox4.Items.Add("20 seconds");
+            comboBox4.Items.Add("30 seconds");
+            comboBox4.Items.Add("60 seconds");
+
+            comboBox4.SelectedItem = "20 seconds";
+        }
+
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (comboBox1.SelectedValue != null)
@@ -176,6 +188,12 @@ namespace NET_Project_Client
             {
                 return new List<Client>();
             }
+        }
+
+        private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string selectedText = comboBox4.SelectedItem.ToString();
+            timerValue = int.Parse(selectedText.Split(' ')[0]);
         }
     }
 }
