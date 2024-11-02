@@ -9,6 +9,7 @@ namespace NET_Project_Client.Model.ChessPieces
 {
     internal class Pawn : Piece
     {
+        public List<Coordinate> Threatening;
         public Pawn(bool color, Coordinate loc) : base(color, loc)
         {
             if(color)
@@ -20,6 +21,8 @@ namespace NET_Project_Client.Model.ChessPieces
         public override void CalculateMoves(Piece[,] GameBoard)
         {
             AvailableMoves = new List<Coordinate>();
+            Threatening = new List<Coordinate>();
+
             if (color == false)//white
             {
                 if(loc.y - 1 >= 0)
@@ -27,25 +30,25 @@ namespace NET_Project_Client.Model.ChessPieces
                     {
                         AvailableMoves.Add(new Coordinate(loc.y - 1, loc.x));
                     }
-                if (loc.y - 2 >= 0 && loc.y == 6)
-                    if (GameBoard[loc.y - 2, loc.x] == null)
-                    {
-                        AvailableMoves.Add(new Coordinate(loc.y - 2, loc.x));
-                    }
                 if (loc.x - 1 >= 0 && loc.y - 1 >= 0)
                 {
                     if (GameBoard[loc.y - 1, loc.x - 1] != null && GameBoard[loc.y - 1, loc.x - 1].getColor() != color)
                     {
-                        AvailableMoves.Add(new Coordinate(loc.y - 1, loc.x - 1));
+                        Threatening.Add(new Coordinate(loc.y - 1, loc.x - 1));
                     }
                 }
                 if (loc.x + 1 <= 3 && loc.y - 1 >= 0)
                 {
                     if (GameBoard[loc.y - 1, loc.x + 1] != null && GameBoard[loc.y - 1, loc.x + 1].getColor() != color)
                     {
-                        AvailableMoves.Add(new Coordinate(loc.y - 1, loc.x + 1));
+                        Threatening.Add(new Coordinate(loc.y - 1, loc.x + 1));
                     }
                 }
+                if (loc.y - 2 >= 0 && loc.y == 6)
+                    if (GameBoard[loc.y - 2, loc.x] == null && GameBoard[loc.y - 1, loc.x] == null)
+                    {
+                        AvailableMoves.Add(new Coordinate(loc.y - 2, loc.x));
+                    }
             }
             else//black
             {
@@ -54,25 +57,25 @@ namespace NET_Project_Client.Model.ChessPieces
                     {
                         AvailableMoves.Add(new Coordinate(loc.y + 1, loc.x));
                     }
-                if (loc.y + 2 <= 7)
-                    if (GameBoard[loc.y + 2, loc.x] == null && loc.y == 1)
-                    {
-                        AvailableMoves.Add(new Coordinate(loc.y + 2, loc.x));
-                    }
                 if (loc.x - 1 >= 0 && loc.y + 1 >= 0 && loc.y + 1 <= 7)
                 {
                     if (GameBoard[loc.y + 1, loc.x - 1] != null && GameBoard[loc.y + 1, loc.x - 1].getColor() != color)
                     {
-                        AvailableMoves.Add(new Coordinate(loc.y + 1, loc.x - 1));
+                        Threatening.Add(new Coordinate(loc.y + 1, loc.x - 1));
                     }
                 }
                 if (loc.x + 1 <= 3 && loc.y + 1 >= 0 && loc.y + 1 <= 7)
                 {
                     if (GameBoard[loc.y + 1, loc.x + 1] != null && GameBoard[loc.y + 1, loc.x + 1].getColor() != color)
                     {
-                        AvailableMoves.Add(new Coordinate(loc.y + 1, loc.x + 1));
+                        Threatening.Add(new Coordinate(loc.y + 1, loc.x + 1));
                     }
                 }
+                if (loc.y + 2 <= 7 && loc.y == 1)
+                    if (GameBoard[loc.y + 2, loc.x] == null && GameBoard[loc.y + 1, loc.x] == null)
+                    {
+                        AvailableMoves.Add(new Coordinate(loc.y + 2, loc.x));
+                    }
             }
             if (loc.x + 1 <= 3)
                 if (GameBoard[loc.y, loc.x + 1] == null)

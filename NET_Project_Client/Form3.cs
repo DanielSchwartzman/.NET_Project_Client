@@ -198,7 +198,7 @@ namespace NET_Project_Client
                 {
                     bool ok = false;
                     Piece p = chessBoard.chessBoard[clickrow, clickcol];
-                    bool res = chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
+                    bool res = chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(row, col), "");
                     this.Invalidate();
                         click = 0;
                     switchTurn();

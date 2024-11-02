@@ -48,20 +48,26 @@ namespace NET_Project_Client.Model
             return false;
         }
 
-        public bool MakeMove(Coordinate begin, Coordinate end)
+        public bool MakeMove(Coordinate begin, Coordinate end, string PieceType)
         {
             bool victory = false;
             int kingRow = -1, kingCol = -1, trRow = -1, trCol = -1;
+
             chessBoard[end.y, end.x] = chessBoard[begin.y, begin.x];
             chessBoard[end.y, end.x].setLoc(end.y, end.x);
             chessBoard[begin.y, begin.x] = null;
 
-            if(type)
+            if (type)
             {
-                SaveMoveToDB(begin, end, isPromo, promoteTo);
+                 SaveMoveToDB(begin, end, isPromo, promoteTo);
             }
-                
 
+            if(PieceType != "")
+            {
+                ChangePiece(end, PieceType);
+            }            
+                
+                
             CalculateMovesForAllPieces();
             removeIllegalMovesForKing();
             check = checkIfCheck(out kingRow, out kingCol, out trRow, out trCol);
@@ -79,9 +85,37 @@ namespace NET_Project_Client.Model
                 }
             }
 
+            if (!turn && type)
+                ((Form1)view).switchTurn();
+
             turn = !turn;
             move++;
             return victory;
+        }
+
+        private void ChangePiece(Coordinate p, string PieceType)
+        {
+            switch (PieceType)
+            {
+                case "Rook":
+                    {
+                        chessBoard[p.y, p.x] = new Rook(chessBoard[p.y, p.x].getColor(), new Coordinate(p.y, p.x));
+                        ((Form1)view).promotions.Add(move, 3);
+                        break;
+                    }
+                case "Bishop":
+                    {
+                        chessBoard[p.y, p.x] = new Bishop(chessBoard[p.y, p.x].getColor(), new Coordinate(p.y, p.x));
+                        ((Form1)view).promotions.Add(move, 1);
+                        break;
+                    }
+                case "Knight":
+                    {
+                        chessBoard[p.y, p.x] = new Knight(chessBoard[p.y, p.x].getColor(), new Coordinate(p.y, p.x));
+                        ((Form1)view).promotions.Add(move, 2);
+                        break;
+                    }
+            }
         }
 
         public bool checkVictory()
@@ -118,6 +152,20 @@ namespace NET_Project_Client.Model
                                 kingCol = chessBoard[i, j].AvailableMoves[k].x;
                                 trRow = i; trCol = j;
                                 return true;
+                            }
+                        }
+                        if (chessBoard[i, j] is Pawn)
+                        {
+                            size = ((Pawn)chessBoard[i, j]).Threatening.Count();
+                            for (int k = 0; k < size; k++)
+                            {
+                                if (chessBoard[((Pawn)chessBoard[i, j]).Threatening[k].y, ((Pawn)chessBoard[i, j]).Threatening[k].x] is King)
+                                {
+                                    kingRow = ((Pawn)chessBoard[i, j]).Threatening[k].y;
+                                    kingCol = ((Pawn)chessBoard[i, j]).Threatening[k].x;
+                                    trRow = i; trCol = j;
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -262,7 +310,7 @@ namespace NET_Project_Client.Model
 
         public void RefreshMoveForPiece(int row, int col)
         {
-         chessBoard[row, col].CalculateMoves(chessBoard);
+            CalculateMovesForAllPieces();
         }
 
         private void InitializeBoard()
@@ -295,6 +343,7 @@ namespace NET_Project_Client.Model
         {
             return chessBoard[row, col];
         }
+
         public void SetPieceAt(Piece newpiece,int row, int col)
         {
             this.chessBoard[row, col] = newpiece;

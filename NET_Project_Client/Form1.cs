@@ -34,7 +34,8 @@ namespace NET_Project_Client
         int squareHeight;
         int click;
         bool turn;
-        Dictionary<int, int> promotions = new Dictionary<int, int>();
+        public Dictionary<int, int> promotions = new Dictionary<int, int>();
+        string PieceType = "";
 
         private static System.Timers.Timer aTimer;
         private static double timerInterval = 20000;
@@ -273,7 +274,7 @@ namespace NET_Project_Client
             }
         }
 
-        private void OnSquareClick(int row, int col)
+        private async void OnSquareClick(int row, int col)
         {
             if (!animationLock || ServerReplyLock)
             {
@@ -294,6 +295,17 @@ namespace NET_Project_Client
                         bool ok = false;
                         Piece p = chessBoard.chessBoard[clickrow, clickcol];
                         int length = p.AvailableMoves.Count();
+                        if (p is Pawn)
+                        {
+                            int lengthP = ((Pawn)p).Threatening.Count();
+                            for (int i = 0; i < lengthP; i++)
+                            {
+                                if (((Pawn)p).Threatening[i].Equals(new Coordinate(row, col)))
+                                {
+                                    ok = true;
+                                }
+                            }
+                        }
                         for (int i = 0; i < length; i++)
                         {
                             if (p.AvailableMoves[i].Equals(new Coordinate(row, col)))
@@ -303,19 +315,14 @@ namespace NET_Project_Client
                         }
                         if (ok)
                         {
+                            PieceType = await ShowCustomMessageBoxAsync(clickrow, clickcol, row, col);
                             // Initiate animation
                             StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
                             label3.Invoke(new MethodInvoker(delegate {
                                 label3.Text = "The move: [" + clickrow + " , " + clickcol + "]  ->  " + "[" + row + " , " + col + "]";
                             }));
                             click = 0;
-                            if (IsPawnPromoting(p,row,col))
-                            {
-                                promoMove=chessBoard.getMoveId();
-                                ShowCustomMessageBox("Choose a Promotion for Pawn",row,col,turn);
-                            }
-                            switchTurn();
-                            
+                            ok = false;
                         }
                         else
                         {
@@ -326,18 +333,12 @@ namespace NET_Project_Client
                 }
             }
         }
-        private bool IsPawnPromoting(Piece p,int row, int col)
+        private bool IsPawnPromoting(Coordinate start, Coordinate end)
         {
-            if (p is Pawn)
+            if (chessBoard.chessBoard[start.y,start.x] is Pawn)
             {
-                if (p.getRow() == 1&& row==0 && p.getColor() == turn)
-                {
+                if(end.y == 0 || end.y == 7)
                     return true;
-                }
-                if (p.getRow() == 6&& row == 7 && p.getColor() == turn)
-                {
-                    return true;
-                }
             }
             return false;
         }
@@ -350,7 +351,7 @@ namespace NET_Project_Client
             aTimer.Start(); // Restart the timer
         }
 
-        private async void switchTurn()
+        public async void switchTurn()
         {
             if (label1.InvokeRequired)
             {
@@ -452,6 +453,7 @@ namespace NET_Project_Client
         // Start animation when moving a piece
         private void StartMoveAnimation(Coordinate start, Coordinate end)
         {
+     
             movingPiece = chessBoard.GetPieceAt(start.y, start.x);
             sourceLocation = new Point(start.x * squareWidth, start.y * squareHeight);
             targetLocation = new Point(end.x * squareWidth, end.y * squareHeight);
@@ -476,7 +478,7 @@ namespace NET_Project_Client
                 animationProgress = 1.0f;
                 animationTimer.Stop();
                 animationLock = false;
-                if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth)))
+                if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth), PieceType))
                     victory();
                 if (chessBoard.check)
                     MessageBox.Show(chessBoard.coordinatecoordinateListString());
@@ -644,92 +646,83 @@ namespace NET_Project_Client
                 label11.Text = country;
             }));
         }
-        //Promotion Msessage Box Code
-        private void ShowCustomMessageBox(string message,int row,int col,bool color)
-        {
-            // Create the panel for the message box
-            messageBoxPanel = new Panel
+
+        // TaskCompletionSource to signal when a choice is made
+        private TaskCompletionSource<string> _choiceCompletionSource;
+
+        public async Task<string> ShowCustomMessageBoxAsync(int startRow, int startCol, int endRow, int endCol)
+        { 
+             // Initialize the TaskCompletionSource
+             _choiceCompletionSource = new TaskCompletionSource<string>();
+
+            if (IsPawnPromoting(new Coordinate(startRow, startCol), new Coordinate(endRow, endCol)))
             {
-                Size = new Size(300, 150),
-                Location = new Point((this.ClientSize.Width - 300) / 2, (this.ClientSize.Height - 150) / 2),
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.White
-            };
 
-            // Create the message label
-            messageLabel = new Label
-            {
-                Text = message,
-                Size = new Size(280, 60),
-                Location = new Point(10, 10),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
+                // Create the panel for the message box
+                messageBoxPanel = new Panel
+                {
+                    Size = new Size(300, 150),
+                    Location = new Point((this.ClientSize.Width - 300) / 2, (this.ClientSize.Height - 150) / 2),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.White
+                };
 
-            // Create buttons
-            buttonBishop = new Button
-            {
-                Text = "Bishop",
-                Size = new Size(75, 30),
-                Location = new Point(50, 80)
-            };
-            buttonBishop.Click += (s, e) => { HandleChoice("Bishop", row, col, color); };
+                // Create the message label
+                messageLabel = new Label
+                {
+                    Text = "Choose a promotion",
+                    Size = new Size(280, 60),
+                    Location = new Point(10, 10),
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
 
-            buttonKnight = new Button
-            {
-                Text = "Knight",
-                Size = new Size(75, 30),
-                Location = new Point(125, 80)
-            };
-            buttonKnight.Click += (s, e) => { HandleChoice("Knight", row, col,color); };
+                // Create buttons
+                buttonBishop = new Button
+                {
+                    Text = "Bishop",
+                    Size = new Size(75, 30),
+                    Location = new Point(50, 80)
+                };
+                buttonBishop.Click += (s, e) => { HandleChoice("Bishop"); };
 
-            buttonRook = new Button
-            {
-                Text = "Rook",
-                Size = new Size(75, 30),
-                Location = new Point(200, 80)
-            };
-            buttonRook.Click += (s, e) => { HandleChoice("Rook", row, col,color); };
+                buttonKnight = new Button
+                {
+                    Text = "Knight",
+                    Size = new Size(75, 30),
+                    Location = new Point(125, 80)
+                };
+                buttonKnight.Click += (s, e) => { HandleChoice("Knight"); };
 
-            // Add controls to the panel
-            messageBoxPanel.Controls.Add(messageLabel);
-            messageBoxPanel.Controls.Add(buttonBishop);
-            messageBoxPanel.Controls.Add(buttonKnight);
-            messageBoxPanel.Controls.Add(buttonRook);
+                buttonRook = new Button
+                {
+                    Text = "Rook",
+                    Size = new Size(75, 30),
+                    Location = new Point(200, 80)
+                };
+                buttonRook.Click += (s, e) => { HandleChoice("Rook"); };
 
-            // Add the panel to the form
-            this.Controls.Add(messageBoxPanel);
-            messageBoxPanel.BringToFront();
+                // Add controls to the panel
+                messageBoxPanel.Controls.Add(messageLabel);
+                messageBoxPanel.Controls.Add(buttonBishop);
+                messageBoxPanel.Controls.Add(buttonKnight);
+                messageBoxPanel.Controls.Add(buttonRook);
+
+                // Add the panel to the form
+                this.Controls.Add(messageBoxPanel);
+                messageBoxPanel.BringToFront();
+
+                return await _choiceCompletionSource.Task;
+            }
+            return "";
         }
 
-        private void HandleChoice(string choice, int row, int col, bool color)
+        private void HandleChoice(string choice)
         {
-            switch (choice)
-            {
-                case "Bishop":
-                    chessBoard.SetPieceAt(new Bishop(color, new Coordinate(row, col)), row, col);
-                    promotions.Add(promoMove,1);
-                    this.Invalidate();
-                    break;
-                case "Knight":
-                    chessBoard.SetPieceAt(new Knight(color, new Coordinate(row, col)), row, col);
-                    promotions.Add(promoMove, 2);
-                    this.Invalidate();
-                    break;
-                case "Rook":
-                    chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
-                    promotions.Add(promoMove, 3);
-                    this.Invalidate();
-                    break;
-                default:
-                    chessBoard.SetPieceAt(new Rook(color, new Coordinate(row, col)), row, col);
-                    promotions.Add(promoMove, 3);
-                    this.Invalidate();
-                    break;
-            }
-            
             // Remove the message box panel
             this.Controls.Remove(messageBoxPanel);
-        }
 
+            // Complete the TaskCompletionSource, allowing the awaiting code to continue
+            _choiceCompletionSource.SetResult(choice);
+        }
     }
 }
