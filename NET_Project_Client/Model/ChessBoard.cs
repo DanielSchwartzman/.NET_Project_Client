@@ -28,7 +28,7 @@ namespace NET_Project_Client.Model
             chessBoard = new Piece[8, 4];
             check = false;
             InitializeBoard();
-            CalculateMovesForAllPieces();
+            CalculateMovesForAllPieces(chessBoard, true);
             this.type = type;
         }
 
@@ -68,9 +68,9 @@ namespace NET_Project_Client.Model
             }            
                 
                 
-            CalculateMovesForAllPieces();
-            removeIllegalMovesForKing();
-            check = checkIfCheck(out kingRow, out kingCol, out trRow, out trCol);
+            CalculateMovesForAllPieces(chessBoard, true);
+            
+            check = checkIfCheck(chessBoard,out kingRow, out kingCol, out trRow, out trCol);
             if (check)
             {
                 setFocus(kingRow, kingCol, trRow, trCol);
@@ -135,34 +135,34 @@ namespace NET_Project_Client.Model
             return victory;
         }
 
-        private bool checkIfCheck(out int kingRow, out int kingCol, out int trRow, out int trCol)
+        private bool checkIfCheck(Piece[,] Board, out int kingRow, out int kingCol, out int trRow, out int trCol)
         {
-            for (int i = 0; i < chessBoard.GetLength(0); i++)
+            for (int i = 0; i < Board.GetLength(0); i++)
             {
-                for(int j = 0; j < chessBoard.GetLength(1); j++)
+                for(int j = 0; j < Board.GetLength(1); j++)
                 {
-                    if (chessBoard[i,j] != null)
+                    if (Board[i,j] != null)
                     {
-                        int size = chessBoard[i, j].AvailableMoves.Count();
+                        int size = Board[i, j].AvailableMoves.Count();
                         for (int k = 0; k < size ; k++)
                         {
-                            if(chessBoard[chessBoard[i, j].AvailableMoves[k].y, chessBoard[i, j].AvailableMoves[k].x] is King)
+                            if(Board[Board[i, j].AvailableMoves[k].y, Board[i, j].AvailableMoves[k].x] is King)
                             {
-                                kingRow = chessBoard[i, j].AvailableMoves[k].y;
-                                kingCol = chessBoard[i, j].AvailableMoves[k].x;
+                                kingRow = Board[i, j].AvailableMoves[k].y;
+                                kingCol = Board[i, j].AvailableMoves[k].x;
                                 trRow = i; trCol = j;
                                 return true;
                             }
                         }
-                        if (chessBoard[i, j] is Pawn)
+                        if (Board[i, j] is Pawn)
                         {
-                            size = ((Pawn)chessBoard[i, j]).Threatening.Count();
+                            size = ((Pawn)Board[i, j]).Threatening.Count();
                             for (int k = 0; k < size; k++)
                             {
-                                if (chessBoard[((Pawn)chessBoard[i, j]).Threatening[k].y, ((Pawn)chessBoard[i, j]).Threatening[k].x] is King)
+                                if (Board[((Pawn)Board[i, j]).Threatening[k].y, ((Pawn)Board[i, j]).Threatening[k].x] is King && (Board[i, j].getColor() != Board[((Pawn)Board[i, j]).Threatening[k].y, ((Pawn)Board[i, j]).Threatening[k].x].getColor()))
                                 {
-                                    kingRow = ((Pawn)chessBoard[i, j]).Threatening[k].y;
-                                    kingCol = ((Pawn)chessBoard[i, j]).Threatening[k].x;
+                                    kingRow = ((Pawn)Board[i, j]).Threatening[k].y;
+                                    kingCol = ((Pawn)Board[i, j]).Threatening[k].x;
                                     trRow = i; trCol = j;
                                     return true;
                                 }
@@ -177,14 +177,54 @@ namespace NET_Project_Client.Model
 
         private void removeIllegalMovesForKing()
         {
+            int kingRow = -1, kingCol = -1, trRow = -1, trCol = -1;
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    if (chessBoard[i, j] is King)
-                        ((King)chessBoard[i, j]).removeMoves(chessBoard);
+                    if (chessBoard[i, j] != null)
+                    {
+                        if(chessBoard[i, j] is King)
+                            ((King)chessBoard[i, j]).removeMoves(chessBoard);
+                        for (int k = 0; k < chessBoard[i, j].AvailableMoves.Count(); k++)
+                        {
+                            Piece[,] copy = getCopyChessboard();
+                            copy[chessBoard[i, j].AvailableMoves[k].y, chessBoard[i, j].AvailableMoves[k].x] = copy[i,j];
+                            copy[chessBoard[i, j].getRow(), chessBoard[i, j].getCol()] = null;
+                            CalculateMovesForAllPieces(copy, false);
+                            if (checkIfCheck(copy, out kingRow, out kingCol, out trRow, out trCol))
+                            {
+                                chessBoard[i, j].AvailableMoves.RemoveAt(k);
+                                k--;
+                            }
+                            chessBoard[i, j].setLoc(i, j);
+                        }
+                    }
                 }
             }
+        }
+
+        private Piece[,] getCopyChessboard()
+        {
+            Piece[,] copy = new Piece[8, 4];
+            for (int i = 0;i < 8;i++)
+            {
+                for(int j = 0;j < 4;j++)
+                {
+                    if(chessBoard[i, j] != null)
+                        if(chessBoard[i, j] is Pawn)
+                            copy[i,j] = new Pawn(chessBoard[i, j].getColor(), new Coordinate(i, j));
+                        if (chessBoard[i, j] is King)
+                            copy[i, j] = new King(chessBoard[i, j].getColor(), new Coordinate(i, j));
+                        if (chessBoard[i, j] is Rook)
+                            copy[i, j] = new Rook(chessBoard[i, j].getColor(), new Coordinate(i, j));
+                        if (chessBoard[i, j] is Bishop)
+                            copy[i, j] = new Bishop(chessBoard[i, j].getColor(), new Coordinate(i, j));
+                        if (chessBoard[i, j] is Knight)
+                            copy[i, j] = new Knight(chessBoard[i, j].getColor(), new Coordinate(i, j));
+                }
+            }
+            return copy;
         }
 
         private void setFocus(int kingRow, int kingCol, int trRow, int trCol)
@@ -298,19 +338,21 @@ namespace NET_Project_Client.Model
             return move;
         }
 
-        public void CalculateMovesForAllPieces()
+        public void CalculateMovesForAllPieces(Piece[,] Board, bool recursion)
         {
             for (int i = 0; i <= 7; i++)
             {
                 for (int j = 0; j <= 3; j++)
-                    if (chessBoard[i,j] != null)
-                        chessBoard[i, j].CalculateMoves(chessBoard);
+                    if (Board[i,j] != null)
+                        Board[i, j].CalculateMoves(Board);
             }
+            if(recursion)
+                removeIllegalMovesForKing();
         }
 
         public void RefreshMoveForPiece(int row, int col)
         {
-            CalculateMovesForAllPieces();
+            CalculateMovesForAllPieces(chessBoard, true);
         }
 
         private void InitializeBoard()

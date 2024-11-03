@@ -50,14 +50,30 @@ namespace NET_Project_Client.Model.ChessPieces
                         if (GameBoard[j, k] != null)
                             if (GameBoard[j, k].getColor() != color)
                             {
-                                size = GameBoard[j, k].AvailableMoves.Count();
-                                for (int l = 0; l < size; l++)
+                                if (GameBoard[j, k] is Pawn)
                                 {
-                                    if(GameBoard[j, k].AvailableMoves[l].Equals(GameBoard[loc.y, loc.x].AvailableMoves[i]))
+                                    size = ((Pawn)GameBoard[j, k]).Threatening.Count();
+                                    for (int l = 0; l < size; l++)
                                     {
-                                        AvailableMoves.RemoveAt(i);
-                                        rm = true;
-                                        break;
+                                        if (((Pawn)GameBoard[j, k]).Threatening[l].Equals(GameBoard[loc.y, loc.x].AvailableMoves[i]))
+                                        {
+                                            AvailableMoves.RemoveAt(i);
+                                            rm = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    size = GameBoard[j, k].AvailableMoves.Count();
+                                    for (int l = 0; l < size; l++)
+                                    {
+                                        if (GameBoard[j, k].AvailableMoves[l].Equals(GameBoard[loc.y, loc.x].AvailableMoves[i]))
+                                        {
+                                            AvailableMoves.RemoveAt(i);
+                                            rm = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }

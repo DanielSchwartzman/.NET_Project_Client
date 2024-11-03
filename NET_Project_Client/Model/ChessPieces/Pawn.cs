@@ -32,17 +32,11 @@ namespace NET_Project_Client.Model.ChessPieces
                     }
                 if (loc.x - 1 >= 0 && loc.y - 1 >= 0)
                 {
-                    if (GameBoard[loc.y - 1, loc.x - 1] != null && GameBoard[loc.y - 1, loc.x - 1].getColor() != color)
-                    {
-                        Threatening.Add(new Coordinate(loc.y - 1, loc.x - 1));
-                    }
+                    Threatening.Add(new Coordinate(loc.y - 1, loc.x - 1));
                 }
                 if (loc.x + 1 <= 3 && loc.y - 1 >= 0)
                 {
-                    if (GameBoard[loc.y - 1, loc.x + 1] != null && GameBoard[loc.y - 1, loc.x + 1].getColor() != color)
-                    {
-                        Threatening.Add(new Coordinate(loc.y - 1, loc.x + 1));
-                    }
+                    Threatening.Add(new Coordinate(loc.y - 1, loc.x + 1));
                 }
                 if (loc.y - 2 >= 0 && loc.y == 6)
                     if (GameBoard[loc.y - 2, loc.x] == null && GameBoard[loc.y - 1, loc.x] == null)
@@ -59,17 +53,11 @@ namespace NET_Project_Client.Model.ChessPieces
                     }
                 if (loc.x - 1 >= 0 && loc.y + 1 >= 0 && loc.y + 1 <= 7)
                 {
-                    if (GameBoard[loc.y + 1, loc.x - 1] != null && GameBoard[loc.y + 1, loc.x - 1].getColor() != color)
-                    {
-                        Threatening.Add(new Coordinate(loc.y + 1, loc.x - 1));
-                    }
+                    Threatening.Add(new Coordinate(loc.y + 1, loc.x - 1));
                 }
                 if (loc.x + 1 <= 3 && loc.y + 1 >= 0 && loc.y + 1 <= 7)
                 {
-                    if (GameBoard[loc.y + 1, loc.x + 1] != null && GameBoard[loc.y + 1, loc.x + 1].getColor() != color)
-                    {
-                        Threatening.Add(new Coordinate(loc.y + 1, loc.x + 1));
-                    }
+                    Threatening.Add(new Coordinate(loc.y + 1, loc.x + 1));
                 }
                 if (loc.y + 2 <= 7 && loc.y == 1)
                     if (GameBoard[loc.y + 2, loc.x] == null && GameBoard[loc.y + 1, loc.x] == null)

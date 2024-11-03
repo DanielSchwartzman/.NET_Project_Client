@@ -300,9 +300,12 @@ namespace NET_Project_Client
                             int lengthP = ((Pawn)p).Threatening.Count();
                             for (int i = 0; i < lengthP; i++)
                             {
-                                if (((Pawn)p).Threatening[i].Equals(new Coordinate(row, col)))
+                                if (chessBoard.chessBoard[((Pawn)p).Threatening[i].y, ((Pawn)p).Threatening[i].x] != null && chessBoard.chessBoard[((Pawn)p).Threatening[i].y, ((Pawn)p).Threatening[i].x].getColor() != p.getColor())
                                 {
-                                    ok = true;
+                                    if (((Pawn)p).Threatening[i].Equals(new Coordinate(row, col)))
+                                    {
+                                        ok = true;
+                                    }
                                 }
                             }
                         }
