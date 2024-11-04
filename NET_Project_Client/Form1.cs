@@ -28,6 +28,7 @@ namespace NET_Project_Client
         int playerID;
         Client client;
         Form1 formInstance;
+        bool msgBool = false;
 
         ChessBoard chessBoard;
         int squareWidth;
@@ -318,6 +319,26 @@ namespace NET_Project_Client
                         }
                         if (ok)
                         {
+                            if (label1.InvokeRequired)
+                            {
+                                //background thread - Invoke to call this on the UI thread
+                                label1.Invoke(new MethodInvoker(delegate 
+                                {
+                                    if (!msgBool)
+                                        label1.Text = "Current Move: Server";
+                                    else label1.Text = "Current Move: White";
+                                    msgBool = !msgBool;
+                                }));
+                            }
+                            else
+                            {
+                                //UI thread - update directly
+                                if (!msgBool)
+                                    label1.Text = "Current Move: Server";
+                                else label1.Text = "Current Move: White";
+                                msgBool = !msgBool;
+                            }
+
                             PieceType = await ShowCustomMessageBoxAsync(clickrow, clickcol, row, col);
                             // Initiate animation
                             StartMoveAnimation(new Coordinate(clickrow, clickcol), new Coordinate(row, col));
@@ -329,7 +350,7 @@ namespace NET_Project_Client
                         }
                         else
                         {
-                            //MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Invalid move", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             click = 0;
                         }
                     }
@@ -356,23 +377,11 @@ namespace NET_Project_Client
 
         public async void switchTurn()
         {
-            if (label1.InvokeRequired)
-            {
-                //background thread - Invoke to call this on the UI thread
-                label1.Invoke(new MethodInvoker(delegate {
-                    label1.Text = "Current Move: " + (turn ? "White" : "Server");
-                }));
-            }
-            else
-            {
-                //UI thread - update directly
-                label1.Text = "Current Move: " + (turn ? "White" : "Server");
-            }
-
             if (!turn) //Server's Turn - API call to server
             {
                 ServerReplyLock = true;
                 turn = !turn;
+
                 ChessClient chessClient = new ChessClient();
                 ResetTimer();
                 if (!animationLock)
@@ -431,7 +440,7 @@ namespace NET_Project_Client
                     }
                 }
             }
-            
+
         }
 
         private void ApplyMoveFromServer(int move)
@@ -451,6 +460,8 @@ namespace NET_Project_Client
             OnSquareClick(toRow, toCol);
             turn = !turn;
             ServerReplyLock = false;
+
+
         }
 
         // Start animation when moving a piece

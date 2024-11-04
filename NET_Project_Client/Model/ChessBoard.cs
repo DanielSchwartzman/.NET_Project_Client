@@ -75,15 +75,19 @@ namespace NET_Project_Client.Model
             {
                 setFocus(kingRow, kingCol, trRow, trCol);
                 ((King)chessBoard[kingRow,kingCol]).setPicture(true);
-                victory = checkVictory();
             }
             else
             {
-                if(chessBoard[end.y,end.x] is King)
+                for (int i = 0; i < 8; i++)
                 {
-                    ((King)chessBoard[end.y, end.x]).setPicture(false);
+                    for (int j = 0; j < 4; j++)
+                    {
+                        if (chessBoard[i, j] is King)
+                            ((King)chessBoard[i, j]).setPicture(false);
+                    }
                 }
             }
+            victory = checkVictory();
 
             if (!turn && type)
                 ((Form1)view).switchTurn();
