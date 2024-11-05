@@ -29,6 +29,7 @@ namespace NET_Project_Client
         Client client;
         Form1 formInstance;
         bool msgBool = false;
+        double Duration = 0;
 
         ChessBoard chessBoard;
         int squareWidth;
@@ -117,6 +118,7 @@ namespace NET_Project_Client
         private void OnTimedEvent(Object source, ElapsedEventArgs e)
         {
             elapsedTime += aTimer.Interval;
+            Duration += aTimer.Interval;
 
             if (elapsedTime >= timerInterval2)
             {
@@ -206,13 +208,25 @@ namespace NET_Project_Client
             }
         }
 
-        public void victory()
+        public async void victory()
         {
-            if (!turn)
+            if (turn)
                 MessageBox.Show("Victory for Blacks");
             else
                 MessageBox.Show("Victory for Whites");
 
+            ChessClient client = new ChessClient();
+            DateTime time = DateTime.Now;
+            Game game = new Game(playerID, !turn, time, (int)Duration);
+            try
+            {
+                var result = await client.postGame(game);
+                Console.WriteLine("Game added successfully: " + result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
             this.Close();
         }
 
@@ -494,8 +508,6 @@ namespace NET_Project_Client
                 animationLock = false;
                 if (chessBoard.MakeMove(new Coordinate(clickrow, clickcol), new Coordinate(targetLocation.Y / squareHeight, targetLocation.X / squareWidth), PieceType))
                     victory();
-                if (chessBoard.check)
-                    MessageBox.Show(chessBoard.coordinatecoordinateListString());
                 // Reset moving piece
                 movingPiece = null;
             }

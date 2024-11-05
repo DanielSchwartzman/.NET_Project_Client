@@ -35,5 +35,23 @@ namespace NET_Project_Client.Model
             }
         }
 
+        public async Task<dynamic> postGame(Game game)
+        {
+            var json = JsonConvert.SerializeObject(game); // Convert game to JSON
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Send POST request to api/Games
+            HttpResponseMessage response = await _httpClient.PostAsync("api/Games", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string result = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<dynamic>(result); // Deserialize server response
+            }
+            else
+            {
+                throw new Exception("Error posting game to server: " + response.ReasonPhrase);
+            }
+        }
     }
 }

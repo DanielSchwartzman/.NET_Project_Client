@@ -89,7 +89,7 @@ namespace NET_Project_Client.Model
             }
             victory = checkVictory();
 
-            if (!turn && type)
+            if (!turn && type && !victory)
                 ((Form1)view).switchTurn();
 
             turn = !turn;
